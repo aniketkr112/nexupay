@@ -23,12 +23,13 @@ import java.io.IOException;
 public class ApiAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApiCredentialRepository apiCredentialRepository;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
     private final CredentialAuthenticationService credentialAuthenticationService;
 
-    public ApiAuthenticationFilter(ApiCredentialRepository apiCredentialRepository, ObjectMapper objectMapper, CredentialAuthenticationService credentialAuthenticationService) {
+    public ApiAuthenticationFilter(ApiCredentialRepository apiCredentialRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper, CredentialAuthenticationService credentialAuthenticationService) {
         this.apiCredentialRepository = apiCredentialRepository;
+        this.passwordEncoder = passwordEncoder;
         this.objectMapper = objectMapper;
         this.credentialAuthenticationService = credentialAuthenticationService;
     }
