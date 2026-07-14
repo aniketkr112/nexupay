@@ -1,11 +1,11 @@
 package com.nexupay.payment.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexupay.payment.common.constant.HttpHeaders;
 import com.nexupay.payment.common.dto.ErrorResponse;
 import com.nexupay.payment.common.enums.ErrorCode;
-import com.nexupay.payment.credential.entity.ApiCredential;
-import com.nexupay.payment.credential.enums.CredentialStatus;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
+import com.nexupay.payment.credential.service.CredentialAuthenticationService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Component
 public class ApiAuthenticationFilter extends OncePerRequestFilter {
@@ -26,10 +25,12 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
     private final ApiCredentialRepository apiCredentialRepository;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final ObjectMapper objectMapper;
+    private final CredentialAuthenticationService credentialAuthenticationService;
 
-    public ApiAuthenticationFilter(ApiCredentialRepository apiCredentialRepository, ObjectMapper objectMapper) {
+    public ApiAuthenticationFilter(ApiCredentialRepository apiCredentialRepository, ObjectMapper objectMapper, CredentialAuthenticationService credentialAuthenticationService) {
         this.apiCredentialRepository = apiCredentialRepository;
         this.objectMapper = objectMapper;
+        this.credentialAuthenticationService = credentialAuthenticationService;
     }
 
     @Override
@@ -40,27 +41,16 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String apiKey = request.getHeader("X-API-Key");
-        String secretKey = request.getHeader("X-API-Secret");
+        String apiKey = request.getHeader(HttpHeaders.API_KEY);
+        String secretKey = request.getHeader(HttpHeaders.API_SECRET);
 
         if (apiKey == null || apiKey.isBlank() || secretKey == null || secretKey.isBlank()) {
             sendUnauthorized(response);
             return;
         }
+        boolean authenticated = credentialAuthenticationService.authenticate(apiKey,secretKey);
 
-        Optional<ApiCredential> credential = apiCredentialRepository.findByApiKey(apiKey);
-        if (credential.isEmpty()) {
-            sendUnauthorized(response);
-            return;
-        }
-        ApiCredential apiCredential = credential.get();
-        boolean validSecret = passwordEncoder.matches(secretKey,apiCredential.getSecretKeyHash());
-        if (!validSecret) {
-            sendUnauthorized(response);
-            return;
-        }
-        if (apiCredential.getStatus() != CredentialStatus.ACTIVE) {
-
+        if (!authenticated) {
             sendUnauthorized(response);
             return;
         }
