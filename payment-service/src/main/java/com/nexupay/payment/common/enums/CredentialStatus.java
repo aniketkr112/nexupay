@@ -1,4 +1,4 @@
-package com.nexupay.payment.credential.enums;
+package com.nexupay.payment.common.enums;
 
 public enum CredentialStatus {
     ACTIVE,

@@ -1,7 +1,7 @@
 package com.nexupay.payment.common.util;
 
 import com.github.f4b6a3.ulid.UlidCreator;
-import com.nexupay.payment.credential.enums.Environment;
+import com.nexupay.payment.common.enums.Environment;
 import org.springframework.stereotype.Component;
 
 @Component

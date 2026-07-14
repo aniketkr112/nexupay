@@ -1,16 +1,16 @@
 package com.nexupay.payment.merchant.service;
 
 import com.nexupay.payment.common.exception.MerchantAlreadyExistsException;
-import com.nexupay.payment.common.security.SecretKeyHasher;
+import com.nexupay.payment.common.cryptography.SecretKeyHasher;
 import com.nexupay.payment.common.util.IdGeneration;
 import com.nexupay.payment.credential.entity.ApiCredential;
-import com.nexupay.payment.credential.enums.CredentialStatus;
-import com.nexupay.payment.credential.enums.Environment;
+import com.nexupay.payment.common.enums.CredentialStatus;
+import com.nexupay.payment.common.enums.Environment;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
 import com.nexupay.payment.merchant.dto.request.CreateMerchantRequest;
 import com.nexupay.payment.merchant.dto.response.CreateMerchantResponse;
 import com.nexupay.payment.merchant.entity.Merchant;
-import com.nexupay.payment.merchant.enums.MerchantStatus;
+import com.nexupay.payment.common.enums.MerchantStatus;
 import com.nexupay.payment.merchant.repository.MerchantRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;

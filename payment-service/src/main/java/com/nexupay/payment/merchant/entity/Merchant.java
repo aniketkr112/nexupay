@@ -2,7 +2,7 @@ package com.nexupay.payment.merchant.entity;
 
 import jakarta.persistence.*;
 
-import com.nexupay.payment.merchant.enums.MerchantStatus;
+import com.nexupay.payment.common.enums.MerchantStatus;
 import java.time.LocalDateTime;
 
 @Entity

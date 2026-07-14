@@ -1,4 +1,4 @@
-package com.nexupay.payment.merchant.enums;
+package com.nexupay.payment.common.enums;
 
 public enum MerchantStatus {
     ACTIVE,

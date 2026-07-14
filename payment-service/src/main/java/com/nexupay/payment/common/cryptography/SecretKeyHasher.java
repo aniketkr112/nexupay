@@ -1,4 +1,4 @@
-package com.nexupay.payment.common.security;
+package com.nexupay.payment.common.cryptography;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -6,7 +6,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class SecretKeyHasher {
 
-    private final BCryptPasswordEncoder  passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder  passwordEncoder;
+
+    public SecretKeyHasher(BCryptPasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public String hash(String secretKey){
         return passwordEncoder.encode(secretKey);

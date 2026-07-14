@@ -1,7 +1,7 @@
 package com.nexupay.payment.credential.entity;
 
-import com.nexupay.payment.credential.enums.CredentialStatus;
-import com.nexupay.payment.credential.enums.Environment;
+import com.nexupay.payment.common.enums.CredentialStatus;
+import com.nexupay.payment.common.enums.Environment;
 import com.nexupay.payment.merchant.entity.Merchant;
 import jakarta.persistence.*;
 
