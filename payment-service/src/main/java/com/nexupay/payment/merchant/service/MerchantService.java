@@ -62,7 +62,7 @@ public class MerchantService {
         CreateMerchantResponse response = new CreateMerchantResponse();
         response.setMerchantId(merchantId);
         response.setApiKey(apiKey);
-        response.setSecretKey(secretKeyHash);
+        response.setSecretKey(secretKey);
 
         return response;
     }

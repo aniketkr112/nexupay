@@ -1,5 +1,8 @@
 package com.nexupay.payment.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexupay.payment.common.dto.ErrorResponse;
+import com.nexupay.payment.common.enums.ErrorCode;
 import com.nexupay.payment.credential.entity.ApiCredential;
 import com.nexupay.payment.credential.enums.CredentialStatus;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
@@ -8,6 +11,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -19,11 +24,12 @@ import java.util.Optional;
 public class ApiAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApiCredentialRepository apiCredentialRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final ObjectMapper objectMapper;
 
-    public ApiAuthenticationFilter(ApiCredentialRepository apiCredentialRepository, PasswordEncoder passwordEncoder) {
+    public ApiAuthenticationFilter(ApiCredentialRepository apiCredentialRepository, ObjectMapper objectMapper) {
         this.apiCredentialRepository = apiCredentialRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -38,27 +44,34 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         String secretKey = request.getHeader("X-API-Secret");
 
         if (apiKey == null || apiKey.isBlank() || secretKey == null || secretKey.isBlank()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendUnauthorized(response);
             return;
         }
 
         Optional<ApiCredential> credential = apiCredentialRepository.findByApiKey(apiKey);
         if (credential.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendUnauthorized(response);
             return;
         }
         ApiCredential apiCredential = credential.get();
         boolean validSecret = passwordEncoder.matches(secretKey,apiCredential.getSecretKeyHash());
         if (!validSecret) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendUnauthorized(response);
             return;
         }
         if (apiCredential.getStatus() != CredentialStatus.ACTIVE) {
 
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendUnauthorized(response);
             return;
         }
         filterChain.doFilter(request, response);
     }
 
+    private void sendUnauthorized(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_API_CREDENTIALS,"Invalid API credentials");
+        objectMapper.writeValue(response.getWriter(), errorResponse);
+    }
 }
