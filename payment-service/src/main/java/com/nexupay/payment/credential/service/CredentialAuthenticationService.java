@@ -1,9 +1,10 @@
 package com.nexupay.payment.credential.service;
 
+import com.nexupay.payment.common.cryptography.SecretKeyHasher;
 import com.nexupay.payment.credential.entity.ApiCredential;
 import com.nexupay.payment.common.enums.CredentialStatus;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.nexupay.payment.security.auth.AuthenticatedMerchant;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -12,31 +13,32 @@ import java.util.Optional;
 public class CredentialAuthenticationService {
 
     private final ApiCredentialRepository apiCredentialRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final SecretKeyHasher secretKeyHasher;
+
 
     public CredentialAuthenticationService(
-            ApiCredentialRepository apiCredentialRepository,
-            PasswordEncoder passwordEncoder) {
+            ApiCredentialRepository apiCredentialRepository, SecretKeyHasher secretKeyHasher) {
 
         this.apiCredentialRepository = apiCredentialRepository;
-        this.passwordEncoder = passwordEncoder;
+
+        this.secretKeyHasher = secretKeyHasher;
     }
 
-    public boolean authenticate(String apiKey, String secretKey) {
+    public AuthenticatedMerchant authenticate(String apiKey, String secretKey) {
         Optional<ApiCredential> credential =
                 apiCredentialRepository.findByApiKey(apiKey);
 
         if (credential.isEmpty()) {
-            return false;
+            return null;
         }
         ApiCredential apiCredential = credential.get();
-        boolean validSecret = passwordEncoder.matches(secretKey,apiCredential.getSecretKeyHash());
+        boolean validSecret = secretKeyHasher.match(secretKey,apiCredential.getSecretKeyHash());
         if (!validSecret) {
-            return false;
+            return null;
         }
         if (apiCredential.getStatus() != CredentialStatus.ACTIVE) {
-            return false;
+            return null;
         }
-        return true;
+        return new AuthenticatedMerchant(apiCredential.getMerchant().getId(),apiCredential.getMerchant().getMerchantId());
     }
 }

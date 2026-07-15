@@ -6,6 +6,7 @@ import com.nexupay.payment.common.dto.ErrorResponse;
 import com.nexupay.payment.common.enums.ErrorCode;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
 import com.nexupay.payment.credential.service.CredentialAuthenticationService;
+import com.nexupay.payment.security.auth.AuthenticatedMerchant;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,12 +50,13 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
             sendUnauthorized(response);
             return;
         }
-        boolean authenticated = credentialAuthenticationService.authenticate(apiKey,secretKey);
+        AuthenticatedMerchant authenticatedMerchant = credentialAuthenticationService.authenticate(apiKey,secretKey);
 
-        if (!authenticated) {
+        if (authenticatedMerchant==null) {
             sendUnauthorized(response);
             return;
         }
+        request.setAttribute(SecurityConstants.AUTHENTICATED_MERCHANT,authenticatedMerchant);
         filterChain.doFilter(request, response);
     }
 
