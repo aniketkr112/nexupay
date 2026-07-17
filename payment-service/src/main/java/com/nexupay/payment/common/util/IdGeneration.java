@@ -21,4 +21,9 @@ public class IdGeneration {
     public String generateCredentialId() {
         return "CRED_"+UlidCreator.getUlid().toString();
     }
+
+    public String generatePaymentId(){
+        return "PAY_"+ UlidCreator.getUlid().toString();
+    }
+
 }
