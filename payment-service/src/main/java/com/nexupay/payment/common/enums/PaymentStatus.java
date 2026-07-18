@@ -1,7 +1,7 @@
 package com.nexupay.payment.common.enums;
 
 public enum PaymentStatus {
-    CREATE,
+    CREATED,
     SUCCESS,
     FAILED,
     EXPIRED

@@ -1,16 +1,16 @@
 package com.nexupay.payment.security.auth;
 
 public class AuthenticatedMerchant {
-    private Long merchantId;
+    private Long id;
     private String merchantPublicId;
 
-    public AuthenticatedMerchant(Long merchantId, String merchantPublicId) {
-        this.merchantId = merchantId;
+    public AuthenticatedMerchant(Long id, String merchantPublicId) {
+        this.id = id;
         this.merchantPublicId = merchantPublicId;
     }
 
-    public Long getMerchantId() {
-        return merchantId;
+    public Long getId() {
+        return id;
     }
 
     public String getMerchantPublicId() {

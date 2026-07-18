@@ -49,4 +49,17 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentNotFound(
+            PaymentNotFoundException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.PAYMENT_DOES_NOT_EXIST,
+                                ex.getMessage()
+                        )
+                );
+    }
+
 }

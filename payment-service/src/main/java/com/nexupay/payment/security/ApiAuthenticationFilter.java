@@ -2,6 +2,7 @@ package com.nexupay.payment.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexupay.payment.common.constant.HttpHeaders;
+import com.nexupay.payment.common.constant.SecurityConstants;
 import com.nexupay.payment.common.dto.ErrorResponse;
 import com.nexupay.payment.common.enums.ErrorCode;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
@@ -13,7 +14,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;

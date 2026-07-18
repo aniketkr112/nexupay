@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
         name = "payment",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_merchant_order",
+                        name = "uk_payment_merchant_order",
                         columnNames = {
                                 "merchant_id",
                                 "merchant_order_id"
