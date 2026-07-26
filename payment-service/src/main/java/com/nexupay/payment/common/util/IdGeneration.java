@@ -26,4 +26,8 @@ public class IdGeneration {
         return "PAY_"+ UlidCreator.getUlid().toString();
     }
 
+    public String generatePaymentAttemptId(){ return "ATT_"+ UlidCreator.getUlid().toString();}
+
+    public String generateBankReferenceId(){ return "BANK_"+ UlidCreator.getUlid().toString();}
+
 }

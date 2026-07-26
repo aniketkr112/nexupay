@@ -1,6 +1,8 @@
 package com.nexupay.payment.payment.entity;
 
 import com.nexupay.payment.common.enums.PaymentStatus;
+import com.nexupay.payment.common.exception.InvalidPaymentStateException;
+import com.nexupay.payment.common.exception.PaymentExpiredException;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -161,6 +163,20 @@ public class Payment {
     @PreUpdate
     public void preUpdate(){
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void markSuccessful(){
+        this.status = PaymentStatus.SUCCESS;
+    }
+    public void ensurePaymentCanBeAttempted() {
+
+        if (status != PaymentStatus.CREATED) {
+            throw new InvalidPaymentStateException(status);
+        }
+
+        if (expiresAt.isBefore(LocalDateTime.now())) {
+            throw new PaymentExpiredException("Payment is expired.");
+        }
     }
 
 }
