@@ -2,6 +2,10 @@ package com.nexupay.payment.bank.dto;
 
 import com.nexupay.payment.common.enums.BankFailureReason;
 import com.nexupay.payment.common.enums.BankTransactionStatus;
+import com.nexupay.payment.payment.dto.request.PaymentRequest;
+import com.nexupay.payment.payment.entity.Payment;
+
+import java.time.LocalDateTime;
 
 public class BankResponse {
 
@@ -11,27 +15,36 @@ public class BankResponse {
 
     private BankFailureReason failureReason;
 
-    public BankTransactionStatus getStatus() {
-        return status;
+    public static BankResponse success(String bankReferenceId){
+        BankResponse response = new BankResponse();
+        response.status = BankTransactionStatus.SUCCESS;
+        response.bankReferenceId = bankReferenceId;
+        return response;
     }
 
-    public void setStatus(BankTransactionStatus status) {
-        this.status = status;
+    public static BankResponse failed(){
+        BankResponse response = new BankResponse();
+        response.status = BankTransactionStatus.FAILED;
+        response.failureReason = BankFailureReason.INSUFFICIENT_BALANCE;
+        return response;
+    }
+    public static BankResponse unknown(){
+        BankResponse response = new BankResponse();
+        response.status = BankTransactionStatus.UNKNOWN;
+        response.failureReason = BankFailureReason.NETWORK_ERROR;
+        return response;
+    }
+
+
+    public BankTransactionStatus getStatus() {
+        return status;
     }
 
     public String getBankReferenceId() {
         return bankReferenceId;
     }
 
-    public void setBankReferenceId(String bankReferenceId) {
-        this.bankReferenceId = bankReferenceId;
-    }
-
     public BankFailureReason getFailureReason() {
         return failureReason;
-    }
-
-    public void setFailureReason(BankFailureReason failureReason) {
-        this.failureReason = failureReason;
     }
 }

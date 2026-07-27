@@ -1,5 +1,6 @@
 package com.nexupay.payment.merchant.entity;
 
+import com.nexupay.payment.merchant.dto.request.CreateMerchantRequest;
 import jakarta.persistence.*;
 
 import com.nexupay.payment.common.enums.MerchantStatus;
@@ -27,79 +28,55 @@ public class Merchant {
     @Column(name = "updated_at",nullable = false)
     private LocalDateTime updatedAt;
 
-    public Merchant() {
+    protected Merchant() {
     }
 
-    public Merchant(String merchantId, String businessName, String email,  String phone, MerchantStatus status) {
-        this.merchantId = merchantId;
-        this.email = email;
-        this.businessName = businessName;
-        this.phone = phone;
-        this.status = status;
+    public static Merchant create(
+            String merchantId,
+            CreateMerchantRequest request
+    ) {
+
+        Merchant merchant = new Merchant();
+
+        merchant.merchantId = merchantId;
+        merchant.businessName = request.getBusinessName();
+        merchant.email = request.getEmail();
+        merchant.phone = request.getPhone();
+        merchant.status = MerchantStatus.ACTIVE;
+
+        return merchant;
     }
 
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public String getMerchantId() {
         return merchantId;
-    }
-
-    public void setMerchantId(String merchantId) {
-        this.merchantId = merchantId;
     }
 
     public String getBusinessName() {
         return businessName;
     }
 
-    public void setBusinessName(String businessName) {
-        this.businessName = businessName;
-    }
-
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getPhone() {
         return phone;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
     public MerchantStatus getStatus() {
         return status;
-    }
-
-    public void setStatus(MerchantStatus status) {
-        this.status = status;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
 

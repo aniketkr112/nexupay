@@ -1,4 +1,4 @@
-package com.nexupay.payment.common.configuration;
+package com.nexupay.payment.security.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

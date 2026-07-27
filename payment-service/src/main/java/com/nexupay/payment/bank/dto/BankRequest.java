@@ -17,23 +17,11 @@ public class BankRequest {
         this.upiId = upiId;
     }
 
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
-    }
-
     public Long getAmount() {
         return amount;
     }
 
-    public void setAmount(Long amount) {
-        this.amount = amount;
-    }
-
     public String getUpiId() {
         return upiId;
-    }
-
-    public void setUpiId(String upiId) {
-        this.upiId = upiId;
     }
 }

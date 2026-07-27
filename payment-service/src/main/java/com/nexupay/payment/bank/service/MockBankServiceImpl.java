@@ -21,14 +21,15 @@ public class MockBankServiceImpl implements BankService{
 
         BankTransactionStatus status =
                 determineStatus(request.getUpiId());
+        String bankReferencedId = idGeneration.generateBankReferenceId();
 
         return switch (status) {
 
-            case SUCCESS -> successResponse();
+            case SUCCESS -> BankResponse.success(bankReferencedId);
 
-            case FAILED -> failedResponse();
+            case FAILED -> BankResponse.failed();
 
-            case UNKNOWN -> unknownResponse();
+            case UNKNOWN -> BankResponse.unknown();
         };
 
     }
@@ -45,36 +46,5 @@ public class MockBankServiceImpl implements BankService{
 
             default -> BankTransactionStatus.FAILED;
         };
-    }
-
-    private BankResponse successResponse(){
-        BankResponse response = new BankResponse();
-
-        response.setStatus(BankTransactionStatus.SUCCESS);
-
-        response.setBankReferenceId(
-                idGeneration.generateBankReferenceId());
-
-        return response;
-    }
-    private BankResponse failedResponse(){
-        BankResponse response = new BankResponse();
-
-        response.setStatus(BankTransactionStatus.FAILED);
-
-        response.setFailureReason(
-                BankFailureReason.INSUFFICIENT_BALANCE);
-
-        return response;
-    }
-    private BankResponse unknownResponse(){
-        BankResponse response = new BankResponse();
-
-        response.setStatus(BankTransactionStatus.UNKNOWN);
-
-        response.setFailureReason(
-                BankFailureReason.NETWORK_ERROR);
-
-        return response;
     }
 }

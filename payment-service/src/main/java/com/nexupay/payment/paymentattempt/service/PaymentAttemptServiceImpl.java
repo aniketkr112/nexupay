@@ -61,7 +61,7 @@ public class PaymentAttemptServiceImpl implements PaymentAttemptService{
 
         PaymentAttempt savedPaymentAttempt = paymentAttemptRepository.save(paymentAttempt);
 
-        BankRequest bankRequest = createBankRequest(payment.getAmount(),savedPaymentAttempt.getAttemptId(),request.getUpiId());
+        BankRequest bankRequest = createBankRequest(payment,savedPaymentAttempt,request);
         BankResponse bankResponse =
                 bankService.processPayment(bankRequest);
 
@@ -75,8 +75,8 @@ public class PaymentAttemptServiceImpl implements PaymentAttemptService{
         };
     }
 
-    private BankRequest createBankRequest(long amount,String transactionId,String upiId){
-        return new BankRequest(transactionId,amount,upiId);
+    private BankRequest createBankRequest(Payment payment,PaymentAttempt paymentAttempt,UpiPaymentAttemptRequest request){
+        return new BankRequest(paymentAttempt.getAttemptId(),payment.getAmount(),request.getUpiId());
     }
     private UpiPaymentAttemptResponse handleSuccess(PaymentAttempt paymentAttempt,Payment payment,BankResponse bankResponse) {
         paymentAttempt.markSuccess(bankResponse.getBankReferenceId());

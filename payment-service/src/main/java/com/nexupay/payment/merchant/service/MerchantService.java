@@ -34,20 +34,10 @@ public class MerchantService {
 
     @Transactional
     public CreateMerchantResponse createMerchant(CreateMerchantRequest request){
-        /*1. Validate request
-        2. Check email already exists?
-        3. Generate merchant_id
-        4. Create Merchant entity
-        5. Save Merchant
-        6. Generate API Key & Secret Key
-        7. Hash Secret Key
-        8. Create ApiCredential entity
-        9. Save ApiCredential
-        10. Return CreateMerchantResponse*/
 
         merchantRepository.findByEmail(request.getEmail()).ifPresent(merchant->{ throw new MerchantAlreadyExistsException("Merchant already exists with email: "+request.getEmail());});
         String merchantId = idGeneration.generateMerchantId();
-        Merchant merchant = new Merchant(merchantId,request.getBusinessName(), request.getEmail(), request.getPhone(), MerchantStatus.ACTIVE);
+        Merchant merchant = Merchant.create(merchantId,request);
         Merchant savedMerchant = merchantRepository.save(merchant);
 
         Environment environment = Environment.SANDBOX;
