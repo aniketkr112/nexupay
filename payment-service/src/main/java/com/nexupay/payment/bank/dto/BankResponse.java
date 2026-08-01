@@ -2,11 +2,10 @@ package com.nexupay.payment.bank.dto;
 
 import com.nexupay.payment.common.enums.BankFailureReason;
 import com.nexupay.payment.common.enums.BankTransactionStatus;
-import com.nexupay.payment.payment.dto.request.PaymentRequest;
-import com.nexupay.payment.payment.entity.Payment;
+import lombok.Getter;
 
-import java.time.LocalDateTime;
 
+@Getter
 public class BankResponse {
 
     private BankTransactionStatus status;
@@ -35,16 +34,11 @@ public class BankResponse {
         return response;
     }
 
-
-    public BankTransactionStatus getStatus() {
-        return status;
+    public static BankResponse notFound(){
+        BankResponse response = new BankResponse();
+        response.status = BankTransactionStatus.NOT_FOUND;
+        response.failureReason = BankFailureReason.TRANSACTION_NOT_FOUND;
+        return response;
     }
 
-    public String getBankReferenceId() {
-        return bankReferenceId;
-    }
-
-    public BankFailureReason getFailureReason() {
-        return failureReason;
-    }
 }

@@ -7,9 +7,9 @@ This document describes how each API request flows through the NexuPay system.
 # Table of Contents
 
 - [x] Merchant Registration
-- [ ] Merchant Authentication
-- [ ] Payment Creation
-- [ ] Payment Attempt
+- [x] Merchant Authentication
+- [x] Payment Creation
+- [x] Payment Attempt
 - [ ] Payment Status
 - [ ] Refund
 - [ ] Webhook
@@ -271,3 +271,148 @@ shouldNotFilter()
 ## Status
 
 ✅ Completed
+
+# 3. Payment Creation
+
+## Purpose
+
+Create a new payment on behalf of a merchant.
+
+## Endpoint
+
+POST /api/v1/payments
+
+## Request Flow
+
+```text
+Merchant
+    │
+    ▼
+Authentication Filter
+    │
+    ▼
+Controller
+    │
+    ▼
+PaymentService
+    │
+    ├── Validate Request
+    ├── Check Idempotency
+    ├── Create Payment
+    ├── Save Payment
+    └── Return Payment URL
+    │
+    ▼
+PostgreSQL
+```
+
+## Database Tables Used
+
+- payment
+
+## Transaction Boundary
+
+Single transaction.
+
+## Status
+
+✅ Completed
+
+---
+
+# 4. Payment Attempt
+
+## Purpose
+
+Execute a payment by communicating with the bank.
+
+## Endpoint
+
+POST /payments/{paymentId}/attempts
+
+## Request Flow
+
+```text
+Customer
+    │
+    ▼
+PaymentAttemptController
+    │
+    ▼
+PaymentAttemptService
+    │
+    ├─────────────────────────────┐
+    │ Transaction 1               │
+    │-----------------------------│
+    │ Lock Payment                │
+    │ Validate Payment            │
+    │ Create PaymentAttempt       │
+    │ Commit                      │
+    └─────────────────────────────┘
+                │
+                ▼
+           Call Bank
+                │
+                ▼
+    ┌─────────────────────────────┐
+    │ Transaction 2               │
+    │-----------------------------│
+    │ Reload Payment (FOR UPDATE) │
+    │ Finalize PaymentAttempt     │
+    │ Update Payment              │
+    │ Commit                      │
+    └─────────────────────────────┘
+                │
+                ▼
+            Response
+```
+
+## Database Tables Used
+
+- payment
+- payment_attempt
+
+## Transaction Boundary
+
+Two independent transactions.
+
+## Status
+
+✅ Completed
+
+---
+
+# 5. Payment Recovery
+
+## Purpose
+
+Automatically recover unfinished payment attempts.
+
+## Status
+
+🚧 In Progress
+
+Implementation planned:
+
+- Scheduler
+- Batch Processing
+- Bank Status Check
+- Finalize Existing PaymentAttempt
+
+---
+
+# 6. Payment Status
+
+Status: ⏳ Planned
+
+---
+
+# 7. Refund
+
+Status: ⏳ Planned
+
+---
+
+# 8. Webhook
+
+Status: ⏳ Planned

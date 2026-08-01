@@ -12,6 +12,8 @@ public enum BankFailureReason {
 
     NETWORK_ERROR,
 
-    UNKNOWN_ERROR
+    UNKNOWN_ERROR,
+
+    TRANSACTION_NOT_FOUND
 
 }

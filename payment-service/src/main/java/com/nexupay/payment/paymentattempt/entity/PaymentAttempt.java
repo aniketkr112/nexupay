@@ -78,33 +78,21 @@ public class PaymentAttempt {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getAttemptId() {
         return attemptId;
     }
 
-    public void setAttemptId(String attemptId) {
-        this.attemptId = attemptId;
-    }
 
     public Payment getPayment() {
         return payment;
     }
 
-    public void setPayment(Payment payment) {
-        this.payment = payment;
-    }
 
     public Integer getAttemptNumber() {
         return attemptNumber;
     }
 
-    public void setAttemptNumber(Integer attemptNumber) {
-        this.attemptNumber = attemptNumber;
-    }
 
     public PaymentAttemptStatus getStatus() {
         return status;
@@ -118,9 +106,6 @@ public class PaymentAttempt {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
 
     public String getBankReferenceId() {
         return bankReferenceId;
@@ -130,9 +115,6 @@ public class PaymentAttempt {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;

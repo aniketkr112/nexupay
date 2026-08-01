@@ -9,23 +9,17 @@ import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptResponse;
 import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptRequest;
 import com.nexupay.payment.paymentattempt.entity.PaymentAttempt;
 import com.nexupay.payment.paymentattempt.service.transaction.PaymentAttemptTransactionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 
 @Service
+@RequiredArgsConstructor
 public class PaymentAttemptServiceImpl implements PaymentAttemptService{
 
     private final BankService bankService;
     private final PaymentAttemptTransactionService paymentAttemptTransactionService;
 
-    public PaymentAttemptServiceImpl(
-            BankService bankService,
-            PaymentAttemptTransactionService paymentAttemptTransactionService
-    ) {
-
-        this.bankService = bankService;
-        this.paymentAttemptTransactionService = paymentAttemptTransactionService;
-    }
 
     @Override
     public UpiPaymentAttemptResponse createUpiPaymentAttempt(UpiPaymentAttemptRequest request) {

@@ -7,6 +7,8 @@ import com.nexupay.payment.payment.dto.response.PaymentResponse;
 import com.nexupay.payment.payment.entity.Payment;
 import com.nexupay.payment.payment.repository.PaymentRepository;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,18 +17,15 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class PaymentService {
-
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     private final PaymentRepository paymentRepository;
     private final IdGeneration idGeneration;
 
-    public PaymentService(PaymentRepository paymentRepository, IdGeneration idGeneration) {
-        this.paymentRepository = paymentRepository;
-        this.idGeneration = idGeneration;
-    }
+
 
     public PaymentResponse createPayment(AuthenticatedMerchant merchant, PaymentRequest request){
 
