@@ -13,7 +13,7 @@ public class CheckoutResponse {
 
     private String merchantName;
 
-    private Long amount;
+    private BigDecimal amount;
 
     private String currency;
 
@@ -47,11 +47,11 @@ public class CheckoutResponse {
         this.merchantName = merchantName;
     }
 
-    public Long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Long amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 

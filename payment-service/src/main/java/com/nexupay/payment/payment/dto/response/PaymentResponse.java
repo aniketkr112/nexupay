@@ -2,6 +2,7 @@ package com.nexupay.payment.payment.dto.response;
 
 import com.nexupay.payment.common.enums.PaymentStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class PaymentResponse {
@@ -9,7 +10,7 @@ public class PaymentResponse {
 
     private String merchantOrderId;
 
-    private Long amount;
+    private BigDecimal amount;
 
     private String currency;
 
@@ -33,11 +34,11 @@ public class PaymentResponse {
         this.merchantOrderId = merchantOrderId;
     }
 
-    public Long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Long amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 

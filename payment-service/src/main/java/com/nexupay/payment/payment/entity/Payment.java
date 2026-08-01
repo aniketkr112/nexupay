@@ -6,6 +6,7 @@ import com.nexupay.payment.common.exception.PaymentExpiredException;
 import com.nexupay.payment.payment.dto.request.PaymentRequest;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,8 +39,8 @@ public class Payment {
     private String customerEmail;
     @Column(length = 20, name = "customer_phone",nullable = true)
     private String customerPhone;
-    @Column(name = "amount",nullable = false)
-    private Long amount;
+    @Column(name = "amount", nullable = false, precision = 19, scale = 2)
+    private BigDecimal amount;
     @Column(length = 3, name = "currency",nullable = false)
     private String currency;
     @Column(name = "expires_at",nullable = false)
@@ -114,7 +115,7 @@ public class Payment {
     }
 
 
-    public Long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 

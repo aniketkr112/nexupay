@@ -42,6 +42,7 @@ public class PaymentAttempt {
     private PaymentAttemptStatus status;
 
     @Column(name = "failure_reason")
+    @Enumerated(EnumType.STRING)
     private BankFailureReason failureReason;
 
     @Enumerated(EnumType.STRING)

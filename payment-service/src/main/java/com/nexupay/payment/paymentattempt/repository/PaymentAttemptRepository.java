@@ -16,4 +16,6 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttempt,L
     """)
     Optional<Integer> findMaxAttemptNumber(@Param("payment") Payment payment);
 
+    Optional<PaymentAttempt> findByAttemptId(String attemptId);
+
 }

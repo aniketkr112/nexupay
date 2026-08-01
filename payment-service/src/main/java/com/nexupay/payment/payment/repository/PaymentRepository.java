@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment,Long> {
+
     Optional<Payment> findByMerchantIdAndMerchantOrderId(
             Long merchantId,
             String merchantOrderId
@@ -24,4 +25,5 @@ public interface PaymentRepository extends JpaRepository<Payment,Long> {
        WHERE p.paymentId = :paymentId
        """)
     Optional<Payment> findByPaymentIdForUpdate(@Param("paymentId") String paymentId);
+
 }

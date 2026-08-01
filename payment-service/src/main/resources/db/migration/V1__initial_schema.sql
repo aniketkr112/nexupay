@@ -68,7 +68,7 @@ CREATE TABLE payment_attempt(
     updated_at TIMESTAMP NOT NULL,
     CONSTRAINT fk_payment_attempt_payment
         FOREIGN KEY (payment_id)
-        REFERENCES payment(id)
+        REFERENCES payment(id),
     CONSTRAINT uk_payment_attempt_number
             UNIQUE (payment_id, attempt_number)
 );
