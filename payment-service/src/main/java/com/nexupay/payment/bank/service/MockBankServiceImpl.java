@@ -30,13 +30,10 @@ public class MockBankServiceImpl implements BankService{
 
             case SUCCESS -> BankResponse.success(bankReferencedId);
 
-            case FAILED -> BankResponse.failed();
+            case FAILED,NOT_FOUND -> BankResponse.failed();
 
             case UNKNOWN -> BankResponse.unknown();
-
-            case NOT_FOUND -> BankResponse.notFound();
         };
-
         bankTransactions.put(request.getTransactionId(),response);
 
         return response;
@@ -45,7 +42,11 @@ public class MockBankServiceImpl implements BankService{
 
     @Override
     public BankResponse checkPaymentStatus(String attemptId) {
-        return bankTransactions.get(attemptId);
+        BankResponse response = bankTransactions.get(attemptId);
+        if(response==null){
+            return BankResponse.notFound();
+        }
+        return response;
     }
 
     private BankTransactionStatus determineStatus(String upiId) {

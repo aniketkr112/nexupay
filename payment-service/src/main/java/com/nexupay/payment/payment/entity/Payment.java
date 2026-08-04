@@ -157,6 +157,9 @@ public class Payment {
     public void markSuccessful(){
         this.status = PaymentStatus.SUCCESS;
     }
+    public void markFailed(){
+        this.status = PaymentStatus.FAILED;
+    }
     public void ensurePaymentCanBeAttempted() {
 
         if (status != PaymentStatus.CREATED) {

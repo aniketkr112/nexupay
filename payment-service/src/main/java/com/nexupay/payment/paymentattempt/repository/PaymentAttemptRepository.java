@@ -29,4 +29,9 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttempt,L
             Pageable pageable
     );
 
+    boolean existsByPaymentAndStatus(
+            Payment payment,
+            PaymentAttemptStatus status
+    );
+
 }

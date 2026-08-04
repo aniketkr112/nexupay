@@ -1,15 +1,15 @@
 package com.nexupay.payment.paymentattempt.service.transaction;
 
 import com.nexupay.payment.bank.dto.BankResponse;
+import com.nexupay.payment.common.enums.PaymentAttemptStatus;
 import com.nexupay.payment.common.enums.PaymentMethod;
+import com.nexupay.payment.common.enums.PaymentStatus;
 import com.nexupay.payment.common.exception.PaymentAttemptNotFoundException;
 import com.nexupay.payment.common.exception.PaymentNotFoundException;
 import com.nexupay.payment.common.util.IdGeneration;
-import com.nexupay.payment.common.util.PaymentMessages;
 import com.nexupay.payment.payment.entity.Payment;
 import com.nexupay.payment.payment.repository.PaymentRepository;
 import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptRequest;
-import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptResponse;
 import com.nexupay.payment.paymentattempt.entity.PaymentAttempt;
 import com.nexupay.payment.paymentattempt.repository.PaymentAttemptRepository;
 import jakarta.transaction.Transactional;
@@ -59,12 +59,23 @@ public class PaymentAttemptTransactionService {
                         .findByAttemptId(attemptId)
                         .orElseThrow(()-> new PaymentAttemptNotFoundException(attemptId));
 
-        Payment payment = paymentAttempt.getPayment();
+        String paymentId = paymentAttempt.getPayment().getPaymentId();
+
+        Payment payment = paymentRepository
+                .findByPaymentIdForUpdate(
+                        paymentId
+                )
+                .orElseThrow(()-> new PaymentNotFoundException(paymentId));
+
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            return paymentAttempt;
+        }
+
         switch (bankResponse.getStatus()) {
 
             case SUCCESS -> handleSuccess(paymentAttempt,payment,bankResponse);
 
-            case FAILED ->  handleFailure(paymentAttempt,payment,bankResponse);
+            case FAILED,NOT_FOUND ->  handleFailure(paymentAttempt,payment,bankResponse);
 
             case UNKNOWN -> handleUnknown(paymentAttempt,payment,bankResponse);
         };
@@ -78,6 +89,15 @@ public class PaymentAttemptTransactionService {
 
     private void handleFailure(PaymentAttempt paymentAttempt,Payment payment,BankResponse bankResponse){
         paymentAttempt.markFailed(bankResponse.getFailureReason());
+        boolean isCreatedPaymentAttemptExist = paymentAttemptRepository
+                .existsByPaymentAndStatus(
+                        payment,
+                        PaymentAttemptStatus.CREATED
+                );
+
+        if(!isCreatedPaymentAttemptExist){
+            payment.markFailed();
+        }
     }
 
     private void handleUnknown(PaymentAttempt paymentAttempt,Payment payment,BankResponse bankResponse){

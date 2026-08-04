@@ -23,7 +23,7 @@ import java.util.List;
 public class PaymentRecoveryService {
 
     private static final int RECOVERY_BATCH_SIZE = 100;
-    private static final Duration RECOVERY_DELAY = Duration.ofMinutes(2);
+    private static final Duration RECOVERY_DELAY = Duration.ofMinutes(5);
 
     private final PaymentAttemptRepository paymentAttemptRepository;
     private final BankService bankService;
@@ -73,6 +73,7 @@ public class PaymentRecoveryService {
                 );
             }
         }
+
 
     }
     private void recoverSinglePaymentAttempt(
