@@ -58,7 +58,7 @@ public class PaymentAttemptServiceImpl implements PaymentAttemptService{
 
             case SUCCESS -> PaymentMessages.success();
 
-            case FAILED -> PaymentMessages.failed(bankResponse.getFailureReason());
+            case FAILED,NOT_FOUND -> PaymentMessages.failed(bankResponse.getFailureReason());
 
             case UNKNOWN -> PaymentMessages.unknown();
         };
