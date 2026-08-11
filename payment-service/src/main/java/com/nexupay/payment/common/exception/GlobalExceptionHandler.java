@@ -62,4 +62,69 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(InvalidPaymentStateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPaymentState(
+            InvalidPaymentStateException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.INVALID_PAYMENT_STATUS,
+                                ex.getMessage()
+                        )
+                );
+    }
+
+    @ExceptionHandler(MerchantNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMerchantNotFound(
+            MerchantNotFoundException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.MERCHANT_NOT_FOUND,
+                                ex.getMessage()
+                        )
+                );
+    }
+
+    @ExceptionHandler(PaymentAttemptNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentAttemptNotFound(
+            PaymentAttemptNotFoundException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.PAYMENT_ATTEMPT_NOT_FOUND,
+                                ex.getMessage()
+                        )
+                );
+    }
+
+    @ExceptionHandler(PaymentExpiredException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentExpired(
+            PaymentExpiredException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.PAYMENT_EXPIRED,
+                                ex.getMessage()
+                        )
+                );
+    }
+
+    @ExceptionHandler(MerchantAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleMerchantAccessDenied(
+            MerchantAccessDeniedException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.PAYMENT_NOT_FOUND_BY_MERCHANT,
+                                ex.getMessage()
+                        )
+                );
+    }
+
 }
