@@ -4,7 +4,7 @@ import java.time.Duration;
 
 public final class PaymentConstants {
     public static final Duration PAYMENT_EXPIRY =
-            Duration.ofMinutes(15);
+            Duration.ofMinutes(60);
 
     public PaymentConstants(){}
 

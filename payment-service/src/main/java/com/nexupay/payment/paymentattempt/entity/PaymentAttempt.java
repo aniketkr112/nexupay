@@ -5,6 +5,8 @@ import com.nexupay.payment.common.enums.PaymentAttemptStatus;
 import com.nexupay.payment.common.enums.PaymentMethod;
 import com.nexupay.payment.payment.entity.Payment;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +23,8 @@ import java.time.LocalDateTime;
                 )
         }
 )
+@Getter
+@NoArgsConstructor
 public class PaymentAttempt {
 
     @Id
@@ -74,51 +78,6 @@ public class PaymentAttempt {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
-    }
-
-
-    public String getAttemptId() {
-        return attemptId;
-    }
-
-
-    public Payment getPayment() {
-        return payment;
-    }
-
-
-    public Integer getAttemptNumber() {
-        return attemptNumber;
-    }
-
-
-    public PaymentAttemptStatus getStatus() {
-        return status;
-    }
-
-    public BankFailureReason getFailureReason() {
-        return failureReason;
-    }
-
-    public PaymentMethod getPaymentMethod() {
-        return paymentMethod;
-    }
-
-
-    public String getBankReferenceId() {
-        return bankReferenceId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
 
     public void markSuccess(String bankReferenceId){
         this.status = PaymentAttemptStatus.SUCCESS;

@@ -41,10 +41,7 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         boolean isCheckoutPage =
                 uri.startsWith("/pay/") && method.equals(HttpMethod.GET.name());
 
-        boolean isUpiPaymentAttempt =
-                uri.equals("/payment-attempts/upi") && method.equals(HttpMethod.POST.name());
-
-        return isMerchantRegistration || isCheckoutPage || isUpiPaymentAttempt;
+        return isMerchantRegistration || isCheckoutPage;
     }
 
     @Override

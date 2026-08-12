@@ -1,7 +1,9 @@
 package com.nexupay.payment.paymentattempt.dto;
 
 import com.nexupay.payment.common.enums.PaymentStatus;
+import lombok.Getter;
 
+@Getter
 public class UpiPaymentAttemptResponse {
 
     private String paymentId;

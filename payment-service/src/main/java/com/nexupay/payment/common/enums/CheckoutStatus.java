@@ -1,5 +1,8 @@
 package com.nexupay.payment.common.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum CheckoutStatus {
     PAYABLE("Choose a payment method."),
 
@@ -15,7 +18,4 @@ public enum CheckoutStatus {
 
     private final String message;
 
-    public String getMessage() {
-        return message;
-    }
 }

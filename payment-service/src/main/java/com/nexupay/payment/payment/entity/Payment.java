@@ -5,6 +5,8 @@ import com.nexupay.payment.common.exception.InvalidPaymentStateException;
 import com.nexupay.payment.common.exception.PaymentExpiredException;
 import com.nexupay.payment.payment.dto.request.PaymentRequest;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
                 )
         }
 )
+@Getter
 public class Payment {
 
     @Id
@@ -80,68 +83,7 @@ public class Payment {
         return payment;
     }
 
-    protected Payment(){
-
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getPaymentId() {
-        return paymentId;
-    }
-
-    public Long getMerchantId() {
-        return merchantId;
-    }
-
-
-    public String getMerchantOrderId() {
-        return merchantOrderId;
-    }
-
-
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public String getCustomerEmail() {
-        return customerEmail;
-    }
-
-    public String getCustomerPhone() {
-        return customerPhone;
-    }
-
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-
-    public PaymentStatus getStatus() {
-        return status;
-    }
-
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+    protected Payment(){}
 
 
     @PrePersist

@@ -1,7 +1,6 @@
 package com.nexupay.payment.paymentattempt.service.transaction;
 
 import com.nexupay.payment.bank.dto.BankResponse;
-import com.nexupay.payment.common.enums.PaymentAttemptStatus;
 import com.nexupay.payment.common.enums.PaymentMethod;
 import com.nexupay.payment.common.enums.PaymentStatus;
 import com.nexupay.payment.common.exception.PaymentAttemptNotFoundException;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PaymentAttemptTransactionService {
 
+    private static final int MAX_ATTEMPTS = 3;
     private final PaymentRepository paymentRepository;
     private final PaymentAttemptRepository paymentAttemptRepository;
     private final IdGeneration idGeneration;
@@ -89,13 +89,7 @@ public class PaymentAttemptTransactionService {
 
     private void handleFailure(PaymentAttempt paymentAttempt,Payment payment,BankResponse bankResponse){
         paymentAttempt.markFailed(bankResponse.getFailureReason());
-        boolean isCreatedPaymentAttemptExist = paymentAttemptRepository
-                .existsByPaymentAndStatus(
-                        payment,
-                        PaymentAttemptStatus.CREATED
-                );
-
-        if(!isCreatedPaymentAttemptExist){
+        if (paymentAttempt.getAttemptNumber() >= MAX_ATTEMPTS) {
             payment.markFailed();
         }
     }
