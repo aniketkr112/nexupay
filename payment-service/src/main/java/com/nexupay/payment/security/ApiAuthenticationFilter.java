@@ -12,6 +12,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class ApiAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApiCredentialRepository apiCredentialRepository;
@@ -28,17 +30,21 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     private final CredentialAuthenticationService credentialAuthenticationService;
 
-    public ApiAuthenticationFilter(ApiCredentialRepository apiCredentialRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper, CredentialAuthenticationService credentialAuthenticationService) {
-        this.apiCredentialRepository = apiCredentialRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.objectMapper = objectMapper;
-        this.credentialAuthenticationService = credentialAuthenticationService;
-    }
-
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().equals("/api/v1/merchants")
-                && request.getMethod().equals(HttpMethod.POST.name());
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+
+        boolean isMerchantRegistration =
+                uri.equals("/api/v1/merchants") && method.equals(HttpMethod.POST.name());
+
+        boolean isCheckoutPage =
+                uri.startsWith("/pay/") && method.equals(HttpMethod.GET.name());
+
+        boolean isUpiPaymentAttempt =
+                uri.equals("/payment-attempts/upi") && method.equals(HttpMethod.POST.name());
+
+        return isMerchantRegistration || isCheckoutPage || isUpiPaymentAttempt;
     }
 
     @Override
