@@ -4,10 +4,13 @@ import com.nexupay.payment.merchant.dto.request.CreateMerchantRequest;
 import jakarta.persistence.*;
 
 import com.nexupay.payment.common.enums.MerchantStatus;
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "merchant")
+@Getter
 public class Merchant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +26,8 @@ public class Merchant {
     @Enumerated(EnumType.STRING)
     @Column(name = "status",nullable = false)
     private MerchantStatus status;
+    @Column(name = "webhook_url",nullable = true)
+    private String webhookUrl;
     @Column(name = "created_at",nullable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at",nullable = false)
@@ -45,38 +50,6 @@ public class Merchant {
         merchant.status = MerchantStatus.ACTIVE;
 
         return merchant;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getMerchantId() {
-        return merchantId;
-    }
-
-    public String getBusinessName() {
-        return businessName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public MerchantStatus getStatus() {
-        return status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
 
