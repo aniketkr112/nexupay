@@ -3,30 +3,35 @@ package com.nexupay.payment.paymentattempt.service.transaction;
 import com.nexupay.payment.bank.dto.BankResponse;
 import com.nexupay.payment.common.enums.PaymentMethod;
 import com.nexupay.payment.common.enums.PaymentStatus;
+import com.nexupay.payment.common.exception.MerchantNotFoundException;
 import com.nexupay.payment.common.exception.PaymentAttemptNotFoundException;
 import com.nexupay.payment.common.exception.PaymentNotFoundException;
 import com.nexupay.payment.common.util.IdGeneration;
+import com.nexupay.payment.merchant.entity.Merchant;
+import com.nexupay.payment.merchant.repository.MerchantRepository;
 import com.nexupay.payment.payment.entity.Payment;
+import com.nexupay.payment.payment.entity.PaymentWebhook;
 import com.nexupay.payment.payment.repository.PaymentRepository;
+import com.nexupay.payment.payment.repository.PaymentWebhookRepository;
 import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptRequest;
 import com.nexupay.payment.paymentattempt.entity.PaymentAttempt;
 import com.nexupay.payment.paymentattempt.repository.PaymentAttemptRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class PaymentAttemptTransactionService {
 
     private static final int MAX_ATTEMPTS = 3;
     private final PaymentRepository paymentRepository;
     private final PaymentAttemptRepository paymentAttemptRepository;
     private final IdGeneration idGeneration;
+    private final MerchantRepository merchantRepository;
+    private final PaymentWebhookRepository paymentWebhookRepository;
 
-    public PaymentAttemptTransactionService(PaymentRepository paymentRepository, PaymentAttemptRepository paymentAttemptRepository, IdGeneration idGeneration) {
-        this.paymentRepository = paymentRepository;
-        this.paymentAttemptRepository = paymentAttemptRepository;
-        this.idGeneration = idGeneration;
-    }
+
 
     @Transactional
     public PaymentAttempt preparePaymentAttempt(UpiPaymentAttemptRequest request){
@@ -82,15 +87,39 @@ public class PaymentAttemptTransactionService {
         return paymentAttempt;
     }
 
+    private void createWebhook(Payment payment) {
+
+        Merchant merchant = merchantRepository
+                .findById(payment.getMerchantId())
+                .orElseThrow(() ->
+                        new MerchantNotFoundException(
+                                payment.getMerchantId()
+                        )
+                );
+
+        if (merchant.getWebhookUrl() == null) {
+            return;
+        }
+
+        PaymentWebhook webhook = PaymentWebhook.create(
+                payment.getPaymentId(),
+                merchant.getWebhookUrl()
+        );
+
+        paymentWebhookRepository.save(webhook);
+    }
+
     private void handleSuccess(PaymentAttempt paymentAttempt, Payment payment, BankResponse bankResponse) {
         paymentAttempt.markSuccess(bankResponse.getBankReferenceId());
         payment.markSuccessful();
+        createWebhook(payment);
     }
 
     private void handleFailure(PaymentAttempt paymentAttempt,Payment payment,BankResponse bankResponse){
         paymentAttempt.markFailed(bankResponse.getFailureReason());
         if (paymentAttempt.getAttemptNumber() >= MAX_ATTEMPTS) {
             payment.markFailed();
+            createWebhook(payment);
         }
     }
 
