@@ -52,6 +52,10 @@ public class Merchant {
         return merchant;
     }
 
+    public void updateWebhookUrl(String webhookUrl) {
+        this.webhookUrl = webhookUrl;
+    }
+
 
     @PrePersist
     public void prePersist(){

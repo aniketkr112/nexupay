@@ -2,16 +2,19 @@ package com.nexupay.payment.merchant.service;
 
 import com.nexupay.payment.common.exception.MerchantAlreadyExistsException;
 import com.nexupay.payment.common.cryptography.SecretKeyHasher;
+import com.nexupay.payment.common.exception.MerchantNotFoundException;
 import com.nexupay.payment.common.util.IdGeneration;
 import com.nexupay.payment.credential.entity.ApiCredential;
 import com.nexupay.payment.common.enums.CredentialStatus;
 import com.nexupay.payment.common.enums.Environment;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
 import com.nexupay.payment.merchant.dto.request.CreateMerchantRequest;
+import com.nexupay.payment.merchant.dto.request.UpdateWebhookRequest;
 import com.nexupay.payment.merchant.dto.response.CreateMerchantResponse;
 import com.nexupay.payment.merchant.entity.Merchant;
 import com.nexupay.payment.common.enums.MerchantStatus;
 import com.nexupay.payment.merchant.repository.MerchantRepository;
+import com.nexupay.payment.security.auth.AuthenticatedMerchant;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -55,5 +58,21 @@ public class MerchantService {
         response.setSecretKey(secretKey);
 
         return response;
+    }
+
+    @Transactional
+    public void updateWebhookUrl(
+            AuthenticatedMerchant authenticatedMerchant,
+            UpdateWebhookRequest request) {
+
+        Merchant merchant = merchantRepository
+                .findById(authenticatedMerchant.getId())
+                .orElseThrow(() ->
+                        new MerchantNotFoundException(
+                                authenticatedMerchant.getId()
+                        )
+                );
+
+        merchant.updateWebhookUrl(request.getWebhookUrl());
     }
 }
