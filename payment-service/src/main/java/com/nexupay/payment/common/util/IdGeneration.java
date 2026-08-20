@@ -30,4 +30,6 @@ public class IdGeneration {
 
     public String generateBankReferenceId(){ return "BANK_"+ UlidCreator.getUlid().toString();}
 
+    public String generateRefundId(){ return "REFU_"+ UlidCreator.getUlid().toString();}
+
 }
