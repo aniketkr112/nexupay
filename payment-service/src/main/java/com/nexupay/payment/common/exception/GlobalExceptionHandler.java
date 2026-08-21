@@ -3,6 +3,8 @@ package com.nexupay.payment.common.exception;
 import com.nexupay.payment.common.dto.ErrorResponse;
 import com.nexupay.payment.common.dto.ValidationError;
 import com.nexupay.payment.common.enums.ErrorCode;
+import com.nexupay.payment.refund.exceptions.LargeAmountRefundException;
+import com.nexupay.payment.refund.exceptions.PaymentNotEligibleForRefundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -122,6 +124,32 @@ public class GlobalExceptionHandler {
                 .body(
                         ErrorResponse.of(
                                 ErrorCode.PAYMENT_NOT_FOUND_BY_MERCHANT,
+                                ex.getMessage()
+                        )
+                );
+    }
+
+    @ExceptionHandler(LargeAmountRefundException.class)
+    public ResponseEntity<ErrorResponse> handleLargeAmountRefundException(
+            LargeAmountRefundException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.REFUND_AMOUNT_EXCEEDS,
+                                ex.getMessage()
+                        )
+                );
+    }
+
+    @ExceptionHandler(PaymentNotEligibleForRefundException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentNotEligibleForRefundException(
+            PaymentNotEligibleForRefundException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.PAYMENT_NOT_ELIGIBLE_FOR_REFUND,
                                 ex.getMessage()
                         )
                 );

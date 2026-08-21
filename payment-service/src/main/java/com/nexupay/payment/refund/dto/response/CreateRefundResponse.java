@@ -1,9 +1,11 @@
 package com.nexupay.payment.refund.dto.response;
 
 import com.nexupay.payment.refund.enums.RefundStatus;
+import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+@Getter
 @Setter
 public class CreateRefundResponse {
     private String refundId;
