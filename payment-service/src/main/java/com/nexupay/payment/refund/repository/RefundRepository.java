@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface RefundRepository extends JpaRepository<Refund, Long> {
@@ -28,4 +29,6 @@ public interface RefundRepository extends JpaRepository<Refund, Long> {
             @Param("paymentId") String paymentId,
             @Param("statuses") Collection<RefundStatus> statuses
     );
+
+    List<Refund> findByStatus(RefundStatus status);
 }

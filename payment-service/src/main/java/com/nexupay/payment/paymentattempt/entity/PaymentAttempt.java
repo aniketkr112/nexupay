@@ -1,6 +1,6 @@
 package com.nexupay.payment.paymentattempt.entity;
 
-import com.nexupay.payment.common.enums.BankFailureReason;
+import com.nexupay.payment.bank.enums.BankFailureReason;
 import com.nexupay.payment.common.enums.PaymentAttemptStatus;
 import com.nexupay.payment.common.enums.PaymentMethod;
 import com.nexupay.payment.payment.entity.Payment;

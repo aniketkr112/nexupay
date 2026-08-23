@@ -1,7 +1,7 @@
 package com.nexupay.payment.bank.dto;
 
-import com.nexupay.payment.common.enums.BankFailureReason;
-import com.nexupay.payment.common.enums.BankTransactionStatus;
+import com.nexupay.payment.bank.enums.BankFailureReason;
+import com.nexupay.payment.bank.enums.BankTransactionStatus;
 import lombok.Getter;
 
 

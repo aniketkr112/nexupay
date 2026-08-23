@@ -1,6 +1,8 @@
 package com.nexupay.payment.refund.entity;
 
 import com.nexupay.payment.common.enums.PaymentStatus;
+import com.nexupay.payment.common.exception.InvalidPaymentStateException;
+import com.nexupay.payment.common.exception.PaymentExpiredException;
 import com.nexupay.payment.payment.dto.request.PaymentRequest;
 import com.nexupay.payment.payment.entity.Payment;
 import com.nexupay.payment.refund.dto.request.CreateRefundRequest;
@@ -83,4 +85,13 @@ public class Refund {
     public void preUpdate(){
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void markSuccessful(String bankReferenceId){
+        this.bankReferenceId = bankReferenceId;
+        this.status = RefundStatus.SUCCESS;
+    }
+    public void markFailed(){
+        this.status = RefundStatus.FAILED;
+    }
+
 }

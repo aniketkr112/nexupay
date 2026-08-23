@@ -1,4 +1,4 @@
-package com.nexupay.payment.common.enums;
+package com.nexupay.payment.bank.enums;
 
 public enum BankFailureReason {
 

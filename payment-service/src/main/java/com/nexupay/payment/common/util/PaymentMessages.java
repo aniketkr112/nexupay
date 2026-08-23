@@ -1,6 +1,6 @@
 package com.nexupay.payment.common.util;
 
-import com.nexupay.payment.common.enums.BankFailureReason;
+import com.nexupay.payment.bank.enums.BankFailureReason;
 
 public final class PaymentMessages {
 
