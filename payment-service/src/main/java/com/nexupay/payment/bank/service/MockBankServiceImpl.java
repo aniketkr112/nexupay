@@ -2,10 +2,8 @@ package com.nexupay.payment.bank.service;
 
 import com.nexupay.payment.bank.dto.*;
 import com.nexupay.payment.bank.entity.BankRefund;
-import com.nexupay.payment.bank.enums.BankRefundLookupStatus;
-import com.nexupay.payment.bank.enums.BankRefundStatus;
-import com.nexupay.payment.bank.enums.BankRefundSubmissionStatus;
-import com.nexupay.payment.bank.enums.BankTransactionStatus;
+import com.nexupay.payment.bank.enums.*;
+import com.nexupay.payment.bank.exceptions.BankCommunicationException;
 import com.nexupay.payment.bank.repository.BankRefundRepository;
 import com.nexupay.payment.common.util.IdGeneration;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +24,8 @@ public class MockBankServiceImpl implements BankService{
 
     private final IdGeneration idGeneration;
     private final BankRefundRepository bankRefundRepository;
+    private RefundSimulationMode refundSimulationMode =
+            RefundSimulationMode.NORMAL_SUCCESS;
 
     @Override
     public BankResponse processPayment(BankRequest request) {
@@ -66,30 +66,70 @@ public class MockBankServiceImpl implements BankService{
 
         if (existingRefund.isPresent()) {
             BankRefund refund = existingRefund.get();
-
             return new BankRefundSubmissionResponse(
                     refund.getRefundId(),
                     refund.getBankReferenceId(),
-                    BankRefundSubmissionStatus.SUCCESS
+                    refund.getStatus() == BankRefundStatus.SUCCESS
+                            ? BankRefundSubmissionStatus.SUCCESS
+                            : BankRefundSubmissionStatus.FAILED
+            );
+        }
+
+        if (refundSimulationMode ==
+                RefundSimulationMode.REQUEST_NOT_REACHED) {
+
+            throw new BankCommunicationException(
+                    "Simulated request did not reach bank"
             );
         }
 
         String bankReferenceId =
                 idGeneration.generateBankReferenceId();
 
-       BankRefund bankRefund = BankRefund.create(request,bankReferenceId,BankRefundStatus.SUCCESS);
+        BankRefundStatus bankStatus =
+                refundSimulationMode ==
+                        RefundSimulationMode.RESPONSE_LOST_FAILED
+                        || refundSimulationMode ==
+                        RefundSimulationMode.FAILED
+                        ? BankRefundStatus.FAILED
+                        : BankRefundStatus.SUCCESS;
+
+        BankRefund bankRefund =
+                BankRefund.create(
+                        request,
+                        bankReferenceId,
+                        bankStatus
+                );
 
         bankRefundRepository.save(bankRefund);
+
+        if (refundSimulationMode ==
+                RefundSimulationMode.RESPONSE_LOST_SUCCESS
+                || refundSimulationMode ==
+                RefundSimulationMode.RESPONSE_LOST_FAILED) {
+
+            throw new BankCommunicationException(
+                    "Simulated lost bank response"
+            );
+        }
 
         return new BankRefundSubmissionResponse(
                 request.getRefundId(),
                 bankReferenceId,
-                BankRefundSubmissionStatus.SUCCESS
+                bankStatus == BankRefundStatus.SUCCESS
+                        ? BankRefundSubmissionStatus.SUCCESS
+                        : BankRefundSubmissionStatus.FAILED
         );
     }
 
     @Override
     public BankRefundLookupResponse lookupRefund(String refundId) {
+
+        if (refundSimulationMode == RefundSimulationMode.LOOKUP_FAILURE) {
+            throw new BankCommunicationException(
+                    "Simulated lookup communication failure"
+            );
+        }
 
         Optional<BankRefund> existingRefund =
                 bankRefundRepository.findByRefundId(refundId);
@@ -126,4 +166,9 @@ public class MockBankServiceImpl implements BankService{
             default -> BankTransactionStatus.FAILED;
         };
     }
+
+    public void setRefundSimulationMode(RefundSimulationMode mode) {
+        this.refundSimulationMode = mode;
+    }
+
 }

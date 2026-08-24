@@ -1,5 +1,6 @@
 package com.nexupay.payment.refund.service.transaction;
 
+import com.nexupay.payment.bank.dto.BankRefundLookupResponse;
 import com.nexupay.payment.bank.dto.BankRefundRequest;
 import com.nexupay.payment.bank.dto.BankRefundSubmissionResponse;
 import com.nexupay.payment.bank.enums.BankRefundSubmissionStatus;
@@ -23,6 +24,16 @@ public class RefundProcessingTransactionService {
     @Transactional
     public void processSingleRefund(Refund refund) {
 
+        if (refund.isBankSubmissionAttempted()) {
+            recoverRefund(refund);
+            return;
+        }
+
+        submitNewRefund(refund);
+    }
+
+    private void submitNewRefund(Refund refund) {
+
         BankRefundRequest request = new BankRefundRequest(
                 refund.getRefundId(),
                 refund.getPaymentId(),
@@ -30,26 +41,59 @@ public class RefundProcessingTransactionService {
                 refund.getCurrency()
         );
 
-        BankRefundSubmissionResponse response =
-                bankService.submitRefund(request);
+        try {
 
-        if (response.getStatus() ==
-                BankRefundSubmissionStatus.SUCCESS) {
+            BankRefundSubmissionResponse response =
+                    bankService.submitRefund(request);
 
-            refund.markSuccessful(
-                    response.getBankReferenceId()
+            if (response.getStatus() ==
+                    BankRefundSubmissionStatus.SUCCESS) {
+
+                refund.markSuccessful(
+                        response.getBankReferenceId()
+                );
+
+            } else {
+                refund.markFailed();
+            }
+
+            refundRepository.save(refund);
+
+        } catch (Exception ex) {
+
+            refund.markBankSubmissionAttempted();
+
+            refundRepository.save(refund);
+
+            log.error(
+                    "Refund submission outcome is uncertain for {}.",
+                    refund.getRefundId(),
+                    ex
             );
+        }
+    }
 
-        } else {
+    private void recoverRefund(Refund refund) {
 
-            refund.markFailed();
+        BankRefundLookupResponse response =
+                bankService.lookupRefund(refund.getRefundId());
+
+        switch (response.getStatus()) {
+
+            case SUCCESS ->
+                    refund.markSuccessful(
+                            response.getBankReferenceId()
+                    );
+
+            case FAILED ->
+                    refund.markFailed();
+
+            case NOT_FOUND -> {
+                refund.markBankSubmissionAttempted(); // keep true
+                submitNewRefund(refund);
+            }
         }
 
         refundRepository.save(refund);
-        log.info(
-                "Pending refund {} completed with bank status {}.",
-                refund.getRefundId(),
-                response.getStatus()
-        );
     }
 }
