@@ -51,6 +51,8 @@ public class Refund {
     @Column(name = "failure_reason")
     @Enumerated(EnumType.STRING)
     private BankRefundFailureReason failureReason;
+    @Column(name = "bank_submission_attempted", nullable = false)
+    private boolean bankSubmissionAttempted;
     @Column(name = "created_at",nullable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at",nullable = false)
@@ -72,6 +74,7 @@ public class Refund {
         refund.amount = request.getAmount();
         refund.currency = payment.getCurrency();
         refund.status = RefundStatus.PENDING;
+        refund.bankSubmissionAttempted = false;
 
         return refund;
     }
@@ -89,6 +92,9 @@ public class Refund {
     public void markSuccessful(String bankReferenceId){
         this.bankReferenceId = bankReferenceId;
         this.status = RefundStatus.SUCCESS;
+    }
+    public void markBankSubmissionAttempted() {
+        this.bankSubmissionAttempted = true;
     }
     public void markFailed(){
         this.status = RefundStatus.FAILED;

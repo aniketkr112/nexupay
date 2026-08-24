@@ -8,11 +8,13 @@ import com.nexupay.payment.refund.entity.Refund;
 import com.nexupay.payment.refund.repository.RefundRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RefundProcessingTransactionService {
 
     private final RefundRepository refundRepository;
@@ -44,5 +46,10 @@ public class RefundProcessingTransactionService {
         }
 
         refundRepository.save(refund);
+        log.info(
+                "Pending refund {} completed with bank status {}.",
+                refund.getRefundId(),
+                response.getStatus()
+        );
     }
 }

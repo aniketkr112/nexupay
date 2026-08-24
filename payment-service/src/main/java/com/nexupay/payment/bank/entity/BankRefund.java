@@ -51,7 +51,7 @@ public class BankRefund {
     private LocalDateTime updatedAt;
 
 
-    public static BankRefund create(BankRefundRequest request,String bankReferenceId){
+    public static BankRefund create(BankRefundRequest request,String bankReferenceId,BankRefundStatus bankRefundStatus){
         BankRefund bankRefund = new BankRefund();
 
         bankRefund.refundId = (request.getRefundId());
@@ -59,7 +59,7 @@ public class BankRefund {
         bankRefund.amount = (request.getAmount());
         bankRefund.currency = (request.getCurrency());
         bankRefund.bankReferenceId = (bankReferenceId);
-        bankRefund.status = (BankRefundStatus.SUCCESS);
+        bankRefund.status = bankRefundStatus;
         return bankRefund;
     }
 

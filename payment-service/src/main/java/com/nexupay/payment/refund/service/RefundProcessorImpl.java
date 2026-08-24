@@ -6,6 +6,9 @@ import com.nexupay.payment.refund.repository.RefundRepository;
 import com.nexupay.payment.refund.service.transaction.RefundProcessingTransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,9 +24,25 @@ public class RefundProcessorImpl implements RefundProcessor {
     @Override
     public void processPendingRefunds() {
 
-        log.info("Refund recover job started.");
+        log.info("Refund processing job started.");
+
+        Pageable limit = PageRequest.of(
+                0,
+                100,
+                Sort.by("createdAt").ascending()
+        );
+
         List<Refund> pendingRefunds =
-                refundRepository.findByStatus(RefundStatus.PENDING);
+                refundRepository.findByStatus(RefundStatus.PENDING,limit);
+        log.info(
+                "Found {} pending refund request.",
+                pendingRefunds.size()
+        );
+
+        if (pendingRefunds.isEmpty()) {
+            log.info("No pending refund request found.");
+            return;
+        }
 
         for (Refund refund : pendingRefunds) {
             try {

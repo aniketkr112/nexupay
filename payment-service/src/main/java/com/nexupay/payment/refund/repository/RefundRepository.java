@@ -2,6 +2,7 @@ package com.nexupay.payment.refund.repository;
 
 import com.nexupay.payment.refund.entity.Refund;
 import com.nexupay.payment.refund.enums.RefundStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,5 +31,5 @@ public interface RefundRepository extends JpaRepository<Refund, Long> {
             @Param("statuses") Collection<RefundStatus> statuses
     );
 
-    List<Refund> findByStatus(RefundStatus status);
+    List<Refund> findByStatus(RefundStatus status, Pageable pageable);
 }

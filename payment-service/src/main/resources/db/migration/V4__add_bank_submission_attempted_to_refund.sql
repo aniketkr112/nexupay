@@ -1,0 +1,2 @@
+ALTER TABLE refund
+ADD COLUMN bank_submission_attempted BOOLEAN NOT NULL DEFAULT FALSE;

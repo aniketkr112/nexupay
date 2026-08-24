@@ -10,6 +10,8 @@ import com.nexupay.payment.bank.repository.BankRefundRepository;
 import com.nexupay.payment.common.util.IdGeneration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +58,7 @@ public class MockBankServiceImpl implements BankService{
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BankRefundSubmissionResponse submitRefund(BankRefundRequest request) {
 
         Optional<BankRefund> existingRefund =
@@ -74,7 +77,7 @@ public class MockBankServiceImpl implements BankService{
         String bankReferenceId =
                 idGeneration.generateBankReferenceId();
 
-       BankRefund bankRefund = BankRefund.create(request,bankReferenceId);
+       BankRefund bankRefund = BankRefund.create(request,bankReferenceId,BankRefundStatus.SUCCESS);
 
         bankRefundRepository.save(bankRefund);
 
