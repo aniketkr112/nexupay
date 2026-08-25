@@ -4,6 +4,7 @@ import com.nexupay.payment.bank.dto.BankRefundLookupResponse;
 import com.nexupay.payment.bank.dto.BankRefundRequest;
 import com.nexupay.payment.bank.dto.BankRefundSubmissionResponse;
 import com.nexupay.payment.bank.enums.BankRefundSubmissionStatus;
+import com.nexupay.payment.bank.exceptions.BankCommunicationException;
 import com.nexupay.payment.bank.service.BankService;
 import com.nexupay.payment.refund.entity.Refund;
 import com.nexupay.payment.refund.repository.RefundRepository;
@@ -59,7 +60,7 @@ public class RefundProcessingTransactionService {
 
             refundRepository.save(refund);
 
-        } catch (Exception ex) {
+        } catch (BankCommunicationException ex) {
 
             refund.markBankSubmissionAttempted();
 
@@ -75,25 +76,32 @@ public class RefundProcessingTransactionService {
 
     private void recoverRefund(Refund refund) {
 
-        BankRefundLookupResponse response =
-                bankService.lookupRefund(refund.getRefundId());
+        try {
 
-        switch (response.getStatus()) {
+            BankRefundLookupResponse response =
+                    bankService.lookupRefund(refund.getRefundId());
 
-            case SUCCESS ->
-                    refund.markSuccessful(
-                            response.getBankReferenceId()
-                    );
+            switch (response.getStatus()) {
 
-            case FAILED ->
-                    refund.markFailed();
+                case SUCCESS -> refund.markSuccessful(
+                        response.getBankReferenceId()
+                );
 
-            case NOT_FOUND -> {
-                refund.markBankSubmissionAttempted(); // keep true
-                submitNewRefund(refund);
+                case FAILED -> refund.markFailed();
+
+                case NOT_FOUND -> submitNewRefund(refund);
             }
-        }
 
-        refundRepository.save(refund);
+            refundRepository.save(refund);
+
+        } catch (BankCommunicationException ex) {
+            // We still don't know what happened at the bank.
+            // Keep the refund PENDING and keep bankSubmissionAttempted = true.
+            log.error(
+                    "Refund recovery lookup failed for {}",
+                    refund.getRefundId(),
+                    ex
+            );
+        }
     }
 }
