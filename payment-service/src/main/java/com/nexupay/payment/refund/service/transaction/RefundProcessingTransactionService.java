@@ -35,6 +35,10 @@ public class RefundProcessingTransactionService {
 
     private void submitNewRefund(Refund refund) {
 
+        log.info(
+                "RefundId {} going to submit bank",
+                refund.getRefundId()
+        );
         BankRefundRequest request = new BankRefundRequest(
                 refund.getRefundId(),
                 refund.getPaymentId(),
@@ -76,11 +80,19 @@ public class RefundProcessingTransactionService {
 
     private void recoverRefund(Refund refund) {
 
+        log.info(
+                "Refund recovery lookup for refundId {}",
+                refund.getRefundId()
+        );
         try {
 
             BankRefundLookupResponse response =
                     bankService.lookupRefund(refund.getRefundId());
 
+            log.info(
+                    "Refund lookup for refundId {} with bank status {}",
+                    refund.getRefundId(),response.getStatus()
+            );
             switch (response.getStatus()) {
 
                 case SUCCESS -> refund.markSuccessful(

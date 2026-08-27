@@ -5,11 +5,10 @@ import com.nexupay.payment.bank.entity.BankRefund;
 import com.nexupay.payment.bank.enums.*;
 import com.nexupay.payment.bank.exceptions.BankCommunicationException;
 import com.nexupay.payment.bank.repository.BankRefundRepository;
+import com.nexupay.payment.bank.transaction.BankRefundTransactionService;
 import com.nexupay.payment.common.util.IdGeneration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.Optional;
@@ -22,10 +21,13 @@ public class MockBankServiceImpl implements BankService{
     private final Map<String, BankResponse> bankTransactions =
             new ConcurrentHashMap<>();
 
+    private RefundSimulationMode refundSimulationMode =
+            RefundSimulationMode.FAILED;
+
+
     private final IdGeneration idGeneration;
     private final BankRefundRepository bankRefundRepository;
-    private RefundSimulationMode refundSimulationMode =
-            RefundSimulationMode.NORMAL_SUCCESS;
+    private final BankRefundTransactionService bankRefundTransactionService;
 
     @Override
     public BankResponse processPayment(BankRequest request) {
@@ -58,7 +60,6 @@ public class MockBankServiceImpl implements BankService{
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BankRefundSubmissionResponse submitRefund(BankRefundRequest request) {
 
         Optional<BankRefund> existingRefund =
@@ -94,14 +95,11 @@ public class MockBankServiceImpl implements BankService{
                         ? BankRefundStatus.FAILED
                         : BankRefundStatus.SUCCESS;
 
-        BankRefund bankRefund =
-                BankRefund.create(
-                        request,
-                        bankReferenceId,
-                        bankStatus
-                );
-
-        bankRefundRepository.save(bankRefund);
+        bankRefundTransactionService.createBankRefund(
+                request,
+                bankReferenceId,
+                bankStatus
+        );
 
         if (refundSimulationMode ==
                 RefundSimulationMode.RESPONSE_LOST_SUCCESS
@@ -165,10 +163,6 @@ public class MockBankServiceImpl implements BankService{
 
             default -> BankTransactionStatus.FAILED;
         };
-    }
-
-    public void setRefundSimulationMode(RefundSimulationMode mode) {
-        this.refundSimulationMode = mode;
     }
 
 }

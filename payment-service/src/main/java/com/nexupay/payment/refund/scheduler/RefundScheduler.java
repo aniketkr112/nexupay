@@ -11,7 +11,7 @@ public class RefundScheduler {
 
     private final RefundProcessor refundProcessor;
 
-    @Scheduled(fixedDelay = 10_000)
+    @Scheduled(fixedDelay = 60_000)
     public void processPendingRefunds() {
         refundProcessor.processPendingRefunds();
     }
