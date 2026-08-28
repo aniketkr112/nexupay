@@ -53,6 +53,8 @@ public class Refund {
     private BankRefundFailureReason failureReason;
     @Column(name = "bank_submission_attempted", nullable = false)
     private boolean bankSubmissionAttempted;
+    @Column(name = "processing_started_at")
+    private LocalDateTime processingStartedAt;
     @Column(name = "created_at",nullable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at",nullable = false)
@@ -87,6 +89,14 @@ public class Refund {
     @PreUpdate
     public void preUpdate(){
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void startProcessing() {
+        this.processingStartedAt = LocalDateTime.now();
+    }
+
+    public void clearProcessing() {
+        this.processingStartedAt = null;
     }
 
     public void markSuccessful(String bankReferenceId){

@@ -4,6 +4,7 @@ import com.nexupay.payment.refund.entity.Refund;
 import com.nexupay.payment.refund.enums.RefundStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -32,4 +33,29 @@ public interface RefundRepository extends JpaRepository<Refund, Long> {
     );
 
     List<Refund> findByStatus(RefundStatus status, Pageable pageable);
+
+    @Query("""
+    SELECT r
+    FROM Refund r
+    WHERE r.status = :status
+    AND r.processingStartedAt IS NULL
+    ORDER BY r.createdAt ASC
+""")
+    List<Refund> findUnclaimedRefunds(
+            @Param("status") RefundStatus status,
+            Pageable pageable
+    );
+
+    @Modifying
+    @Query("""
+    UPDATE Refund r
+    SET r.processingStartedAt = CURRENT_TIMESTAMP
+    WHERE r.id = :id
+      AND r.status = :status
+      AND r.processingStartedAt IS NULL
+""")
+    int claimRefund(
+            @Param("id") Long id,
+            @Param("status") RefundStatus status
+    );
 }

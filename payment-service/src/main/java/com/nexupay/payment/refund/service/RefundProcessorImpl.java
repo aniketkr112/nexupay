@@ -3,6 +3,7 @@ package com.nexupay.payment.refund.service;
 import com.nexupay.payment.refund.entity.Refund;
 import com.nexupay.payment.refund.enums.RefundStatus;
 import com.nexupay.payment.refund.repository.RefundRepository;
+import com.nexupay.payment.refund.service.transaction.RefundClaimService;
 import com.nexupay.payment.refund.service.transaction.RefundProcessingTransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class RefundProcessorImpl implements RefundProcessor {
 
     private final RefundRepository refundRepository;
     private final RefundProcessingTransactionService refundProcessingTransactionService;
+    private final RefundClaimService refundClaimService;
 
     @Override
     public void processPendingRefunds() {
@@ -46,6 +48,17 @@ public class RefundProcessorImpl implements RefundProcessor {
 
         for (Refund refund : pendingRefunds) {
             try {
+                boolean claimed =
+                        refundClaimService.claimRefund(refund.getId());
+
+                if (!claimed) {
+                    log.info(
+                            "Refund {} was already claimed by another instance. Skipping.",
+                            refund.getRefundId()
+                    );
+                    continue;
+                }
+
                 refundProcessingTransactionService.processSingleRefund(refund);
             } catch (Exception ex) {
                 log.error(
