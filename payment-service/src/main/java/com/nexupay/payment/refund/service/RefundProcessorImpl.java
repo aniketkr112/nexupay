@@ -12,12 +12,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RefundProcessorImpl implements RefundProcessor {
+
+    LocalDateTime expirationTime =
+            LocalDateTime.now().minusMinutes(5);
 
     private final RefundRepository refundRepository;
     private final RefundProcessingTransactionService refundProcessingTransactionService;
@@ -35,7 +39,7 @@ public class RefundProcessorImpl implements RefundProcessor {
         );
 
         List<Refund> pendingRefunds =
-                refundRepository.findByStatus(RefundStatus.PENDING,limit);
+                refundRepository.findUnclaimedRefunds(RefundStatus.PENDING,expirationTime,limit);
         log.info(
                 "Found {} pending refund request.",
                 pendingRefunds.size()

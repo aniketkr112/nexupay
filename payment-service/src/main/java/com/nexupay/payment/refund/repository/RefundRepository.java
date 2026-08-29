@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -38,11 +39,15 @@ public interface RefundRepository extends JpaRepository<Refund, Long> {
     SELECT r
     FROM Refund r
     WHERE r.status = :status
-    AND r.processingStartedAt IS NULL
+      AND (
+          r.processingStartedAt IS NULL
+          OR r.processingStartedAt < :expirationTime
+      )
     ORDER BY r.createdAt ASC
 """)
     List<Refund> findUnclaimedRefunds(
             @Param("status") RefundStatus status,
+            @Param("expirationTime") LocalDateTime expirationTime,
             Pageable pageable
     );
 
@@ -52,10 +57,14 @@ public interface RefundRepository extends JpaRepository<Refund, Long> {
     SET r.processingStartedAt = CURRENT_TIMESTAMP
     WHERE r.id = :id
       AND r.status = :status
-      AND r.processingStartedAt IS NULL
+      AND (
+          r.processingStartedAt IS NULL
+          OR r.processingStartedAt < :expirationTime
+      )
 """)
     int claimRefund(
             @Param("id") Long id,
-            @Param("status") RefundStatus status
+            @Param("status") RefundStatus status,
+            @Param("expirationTime") LocalDateTime expirationTime
     );
 }
