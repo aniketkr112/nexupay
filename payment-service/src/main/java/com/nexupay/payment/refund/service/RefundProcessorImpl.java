@@ -20,9 +20,6 @@ import java.util.List;
 @Slf4j
 public class RefundProcessorImpl implements RefundProcessor {
 
-    LocalDateTime expirationTime =
-            LocalDateTime.now().minusMinutes(5);
-
     private final RefundRepository refundRepository;
     private final RefundProcessingTransactionService refundProcessingTransactionService;
     private final RefundClaimService refundClaimService;
@@ -38,8 +35,16 @@ public class RefundProcessorImpl implements RefundProcessor {
                 Sort.by("createdAt").ascending()
         );
 
+        LocalDateTime expirationTime =
+                LocalDateTime.now().minusMinutes(5);
+
         List<Refund> pendingRefunds =
-                refundRepository.findUnclaimedRefunds(RefundStatus.PENDING,expirationTime,limit);
+                refundRepository.findUnclaimedRefunds(
+                        RefundStatus.PENDING,
+                        expirationTime,
+                        limit
+                );
+
         log.info(
                 "Found {} pending refund request.",
                 pendingRefunds.size()

@@ -61,13 +61,13 @@ public class RefundProcessingTransactionService {
             } else {
                 refund.markFailed();
             }
-
+            refund.clearProcessing();
             refundRepository.save(refund);
 
         } catch (BankCommunicationException ex) {
 
             refund.markBankSubmissionAttempted();
-
+            refund.clearProcessing();
             refundRepository.save(refund);
 
             log.error(
@@ -103,7 +103,7 @@ public class RefundProcessingTransactionService {
 
                 case NOT_FOUND -> submitNewRefund(refund);
             }
-
+            refund.clearProcessing();
             refundRepository.save(refund);
 
         } catch (BankCommunicationException ex) {

@@ -22,7 +22,7 @@ public class MockBankServiceImpl implements BankService{
             new ConcurrentHashMap<>();
 
     private RefundSimulationMode refundSimulationMode =
-            RefundSimulationMode.FAILED;
+            RefundSimulationMode.NORMAL_SUCCESS;
 
 
     private final IdGeneration idGeneration;
