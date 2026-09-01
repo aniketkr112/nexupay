@@ -3,6 +3,7 @@ package com.nexupay.payment.payment.scheduler;
 import com.nexupay.payment.common.enums.PaymentWebhookStatus;
 import com.nexupay.payment.payment.entity.PaymentWebhook;
 import com.nexupay.payment.payment.repository.PaymentWebhookRepository;
+import com.nexupay.payment.payment.service.PaymentWebhookClaimService;
 import com.nexupay.payment.payment.service.PaymentWebhookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -19,6 +21,7 @@ public class PaymentWebhookScheduler {
 
     private final PaymentWebhookRepository paymentWebhookRepository;
     private final PaymentWebhookService paymentWebhookService;
+    private final PaymentWebhookClaimService paymentWebhookClaimService;
 
     @Scheduled(fixedDelay = 60000)
     public void processPendingWebhooks() {
@@ -39,6 +42,23 @@ public class PaymentWebhookScheduler {
 
         for (PaymentWebhook webhook : webhooks) {
             try {
+                LocalDateTime expiryTime =
+                        LocalDateTime.now().minusMinutes(5);
+
+                boolean claimed =
+                        paymentWebhookClaimService.claimWebhook(
+                                webhook.getId(),
+                                expiryTime
+                        );
+
+                if (!claimed) {
+                    log.info(
+                            "Webhook {} was already claimed by another instance. Skipping.",
+                            webhook.getId()
+                    );
+                    continue;
+                }
+
                 paymentWebhookService.sendWebhook(webhook);
             } catch (Exception e) {
                 log.error(

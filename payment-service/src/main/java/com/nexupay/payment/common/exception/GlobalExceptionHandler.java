@@ -155,4 +155,17 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpectedException(
+            Exception ex) {
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.INTERNAL_SERVER_ERROR,
+                                "An unexpected error occurred"
+                        )
+                );
+    }
+
 }

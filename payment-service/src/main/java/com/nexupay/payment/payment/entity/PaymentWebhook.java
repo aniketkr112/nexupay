@@ -30,6 +30,8 @@ public class PaymentWebhook {
     private PaymentWebhookStatus status;
     @Column(name = "attempt_count",nullable = false)
     private Integer attemptCount;
+    @Column(name = "processing_started_at")
+    private LocalDateTime processingStartedAt;
     @Column(name = "created_at",nullable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at",nullable = false)
@@ -57,6 +59,17 @@ public class PaymentWebhook {
         this.attemptCount++;
     }
 
+    public LocalDateTime getProcessingStartedAt() {
+        return processingStartedAt;
+    }
+
+    public void markProcessingStarted() {
+        this.processingStartedAt = LocalDateTime.now();
+    }
+
+    public void clearProcessingStarted() {
+        this.processingStartedAt = null;
+    }
 
     @PrePersist
     public void prePersist(){
