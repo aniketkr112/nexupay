@@ -149,7 +149,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(
                         ErrorResponse.of(
-                                ErrorCode.PAYMENT_NOT_ELIGIBLE_FOR_REFUND,
+                                ErrorCode.PAYMENT_ATTEMPT_IS_ALREADY_IN_PROCESS,
                                 ex.getMessage()
                         )
                 );
@@ -164,6 +164,19 @@ public class GlobalExceptionHandler {
                         ErrorResponse.of(
                                 ErrorCode.INTERNAL_SERVER_ERROR,
                                 "An unexpected error occurred"
+                        )
+                );
+    }
+
+    @ExceptionHandler(PaymentAttemptInProgressException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentAttemptInProgressException(
+            PaymentAttemptInProgressException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.PAYMENT_NOT_ELIGIBLE_FOR_REFUND,
+                                ex.getMessage()
                         )
                 );
     }

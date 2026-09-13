@@ -94,7 +94,7 @@ public class PaymentAttempt {
     }
 
     public void markUnknown(BankFailureReason reason){
-        this.status = PaymentAttemptStatus.UNKNOWN;
+        this.status = PaymentAttemptStatus.CREATED;
         this.failureReason = reason;
         this.bankReferenceId = null;
         this.updatedAt = LocalDateTime.now();

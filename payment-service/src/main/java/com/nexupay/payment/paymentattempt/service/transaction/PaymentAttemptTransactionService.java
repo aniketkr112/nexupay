@@ -1,9 +1,11 @@
 package com.nexupay.payment.paymentattempt.service.transaction;
 
 import com.nexupay.payment.bank.dto.BankResponse;
+import com.nexupay.payment.common.enums.PaymentAttemptStatus;
 import com.nexupay.payment.common.enums.PaymentMethod;
 import com.nexupay.payment.common.enums.PaymentStatus;
 import com.nexupay.payment.common.exception.MerchantNotFoundException;
+import com.nexupay.payment.common.exception.PaymentAttemptInProgressException;
 import com.nexupay.payment.common.exception.PaymentAttemptNotFoundException;
 import com.nexupay.payment.common.exception.PaymentNotFoundException;
 import com.nexupay.payment.common.util.IdGeneration;
@@ -41,6 +43,18 @@ public class PaymentAttemptTransactionService {
                         new PaymentNotFoundException(request.getPaymentId()));
 
         payment.ensurePaymentCanBeAttempted();
+
+        boolean unresolvedAttempt =
+                paymentAttemptRepository.existsByPaymentAndStatus(
+                        payment,
+                        PaymentAttemptStatus.CREATED
+                );
+
+        if (unresolvedAttempt) {
+            throw new PaymentAttemptInProgressException(
+                    "A payment attempt is already in progress"
+            );
+        }
 
         int nextAttemptNumber =paymentAttemptRepository
                 .findMaxAttemptNumber(payment)
