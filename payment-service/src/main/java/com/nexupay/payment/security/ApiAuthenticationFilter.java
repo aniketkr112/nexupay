@@ -35,6 +35,10 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String method = request.getMethod();
 
+
+        boolean isActuator =
+                uri.startsWith("/actuator/") && method.equals(HttpMethod.GET.name());
+
         boolean isMerchantRegistration =
                 uri.equals("/api/v1/merchants") && method.equals(HttpMethod.POST.name());
 
@@ -44,7 +48,7 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         boolean isFakeMerchantWebhook =
                 uri.startsWith("/test-merchant/") && method.equals(HttpMethod.POST.name());
 
-        return isMerchantRegistration || isCheckoutPage || isFakeMerchantWebhook;
+        return isMerchantRegistration || isCheckoutPage || isFakeMerchantWebhook || isActuator;
     }
 
     @Override

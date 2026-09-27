@@ -25,6 +25,8 @@ dependencies {
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	implementation 'com.github.f4b6a3:ulid-creator:5.2.3'
 	implementation 'org.springframework.security:spring-security-crypto'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
