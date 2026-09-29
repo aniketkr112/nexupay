@@ -155,6 +155,19 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(AuthenticationServiceException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationServiceException(
+            AuthenticationServiceException ex) {
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.AUTHENTICATION_SERVICE_TEMPORARILY_UNAVAIABLE,
+                                ex.getMessage()
+                        )
+                );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpectedException(
             Exception ex) {

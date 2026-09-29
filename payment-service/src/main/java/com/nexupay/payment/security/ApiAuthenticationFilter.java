@@ -8,12 +8,14 @@ import com.nexupay.payment.common.enums.ErrorCode;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
 import com.nexupay.payment.credential.service.CredentialAuthenticationService;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
+import com.nexupay.payment.security.ratelimit.RedisRateLimitService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -29,6 +31,7 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
     private final CredentialAuthenticationService credentialAuthenticationService;
+    private final RedisRateLimitService redisRateLimitService;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -64,6 +67,24 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
 
         if (authenticatedMerchant==null) {
             sendUnauthorized(response);
+            return;
+        }
+        boolean allowed = redisRateLimitService.tryAcquire(
+                authenticatedMerchant.getId()
+        );
+
+        if (!allowed) {
+            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setHeader("Retry-After", "1");
+
+            ErrorResponse errorResponse = ErrorResponse.of(
+                    ErrorCode.RATE_LIMIT_EXCEEDED,
+                    "Too many requests"
+            );
+
+            objectMapper.writeValue(response.getWriter(), errorResponse);
+
             return;
         }
         request.setAttribute(SecurityConstants.AUTHENTICATED_MERCHANT,authenticatedMerchant);
