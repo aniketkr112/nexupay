@@ -26,7 +26,10 @@ dependencies {
 	implementation 'com.github.f4b6a3:ulid-creator:5.2.3'
 	implementation 'org.springframework.security:spring-security-crypto'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	// for redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	// for bloom filter
+	implementation 'com.google.guava:guava:33.4.8-jre'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -34,6 +37,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok:1.18.42'
 	testCompileOnly 'org.projectlombok:lombok:1.18.42'
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.42'
+
 }
 
 tasks.named('test') {

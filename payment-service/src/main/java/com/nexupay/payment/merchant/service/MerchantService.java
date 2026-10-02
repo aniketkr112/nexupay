@@ -14,31 +14,34 @@ import com.nexupay.payment.merchant.dto.response.CreateMerchantResponse;
 import com.nexupay.payment.merchant.entity.Merchant;
 import com.nexupay.payment.common.enums.MerchantStatus;
 import com.nexupay.payment.merchant.repository.MerchantRepository;
+import com.nexupay.payment.outbox.entity.OutboxEvent;
+import com.nexupay.payment.outbox.repository.OutboxEventRepository;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 
 @Service
+@RequiredArgsConstructor
 public class MerchantService {
 
     private final MerchantRepository merchantRepository;
     private final ApiCredentialRepository apiCredentialRepository;
     private final IdGeneration idGeneration;
     private final SecretKeyHasher secretKeyHasher;
+    private final OutboxEventRepository outboxEventRepository;
 
-
-    public MerchantService(MerchantRepository merchantRepository, ApiCredentialRepository apiCredentialRepository, IdGeneration idGeneration, SecretKeyHasher secretKeyHasher) {
-        this.merchantRepository = merchantRepository;
-        this.apiCredentialRepository = apiCredentialRepository;
-        this.idGeneration = idGeneration;
-        this.secretKeyHasher = secretKeyHasher;
-    }
 
     @Transactional
     public CreateMerchantResponse createMerchant(CreateMerchantRequest request){
 
-        merchantRepository.findByEmail(request.getEmail()).ifPresent(merchant->{ throw new MerchantAlreadyExistsException("Merchant already exists with email: "+request.getEmail());});
+        merchantRepository
+                .findByEmail(request.getEmail())
+                .ifPresent(merchant->{
+                            throw new MerchantAlreadyExistsException("Merchant already exists with email: "+request.getEmail());
+                        });
         String merchantId = idGeneration.generateMerchantId();
         Merchant merchant = Merchant.create(merchantId,request);
         Merchant savedMerchant = merchantRepository.save(merchant);
@@ -49,8 +52,24 @@ public class MerchantService {
         String secretKeyHash = secretKeyHasher.hash(secretKey);
         String apiCredentialId = idGeneration.generateCredentialId();
 
-        ApiCredential apiCredential =  new ApiCredential(apiCredentialId,savedMerchant,apiKey,secretKeyHash,environment, CredentialStatus.ACTIVE);
+        ApiCredential apiCredential =  new ApiCredential(
+                apiCredentialId,
+                savedMerchant,
+                apiKey,
+                secretKeyHash,
+                environment,
+                CredentialStatus.ACTIVE
+        );
         apiCredentialRepository.save(apiCredential);
+
+        OutboxEvent outboxEvent = new OutboxEvent(
+                "API_CREDENTIAL_CREATED",
+                "API_CREDENTIAL",
+                apiCredentialId,
+                apiKey
+        );
+
+        outboxEventRepository.save(outboxEvent);
 
         CreateMerchantResponse response = new CreateMerchantResponse();
         response.setMerchantId(merchantId);
