@@ -2,6 +2,7 @@ package com.nexupay.payment.security.bloom;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ApiCredentialStreamConsumer {
 
     private static final String STREAM_KEY =
@@ -40,6 +42,7 @@ public class ApiCredentialStreamConsumer {
 
     @Scheduled(fixedDelay = 1000)
     public void consume() {
+        streamConfig.ensureConsumerGroup(consumerGroup);
         List<MapRecord<String, Object, Object>> records =
                 redisTemplate.opsForStream().read(
                         Consumer.from(
@@ -69,6 +72,11 @@ public class ApiCredentialStreamConsumer {
                         String.valueOf(value.get("payload"));
 
                 bloomFilterService.add(apiKey);
+                log.info(
+                        "Bloom updated: instance={}, apiKey={}",
+                        consumerName,
+                        apiKey
+                );
             }
 
             redisTemplate.opsForStream()

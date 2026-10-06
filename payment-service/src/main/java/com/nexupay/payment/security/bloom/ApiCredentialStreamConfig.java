@@ -1,7 +1,8 @@
 package com.nexupay.payment.security.bloom;
 
+import io.lettuce.core.RedisBusyException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,28 +18,27 @@ public class ApiCredentialStreamConfig {
     public void ensureConsumerGroup(String consumerGroup) {
 
         try {
-            redisTemplate.execute((RedisCallback<Object>) (connection) -> {
 
-                connection.execute(
-                        "XGROUP",
-                        STREAM_KEY.getBytes(),
-                        "CREATE".getBytes(),
-                        consumerGroup.getBytes(),
-                        "0-0".getBytes(),
-                        "MKSTREAM".getBytes()
-                );
-
-                return null;
-            });
+            redisTemplate.opsForStream().createGroup(
+                    STREAM_KEY,
+                    ReadOffset.from("0-0"),
+                    consumerGroup
+            );
 
         } catch (Exception exception) {
 
-            /*
-             * Group may already exist.
-             *
-             * We don't want application startup
-             * to fail in that case.
-             */
+            Throwable cause = exception;
+
+            while (cause != null) {
+
+                if (cause instanceof RedisBusyException) {
+                    return;
+                }
+
+                cause = cause.getCause();
+            }
+
+            throw exception;
         }
     }
 }
