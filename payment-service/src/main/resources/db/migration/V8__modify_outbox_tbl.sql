@@ -1,0 +1,5 @@
+ALTER TABLE outbox_event
+ADD COLUMN claimed_at TIMESTAMP NULL;
+
+ALTER TABLE outbox_event
+ADD COLUMN claim_until TIMESTAMP NULL;

@@ -32,6 +32,13 @@ public class OutboxEvent {
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
+    @Column(name = "claimed_at")
+    private LocalDateTime claimedAt;
+
+    @Column(name = "claim_until")
+    private LocalDateTime claimUntil;
+
+
     public OutboxEvent() {
     }
 
@@ -48,7 +55,4 @@ public class OutboxEvent {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void markPublished() {
-        this.publishedAt = LocalDateTime.now();
-    }
 }
