@@ -6,8 +6,11 @@ import com.nexupay.payment.credential.entity.ApiCredential;
 import com.nexupay.payment.common.enums.CredentialStatus;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
+import com.nexupay.payment.security.bloom.ApiKeyBloomFilterService;
+import com.nexupay.payment.security.bloom.SharedApiKeySetService;
 import com.nexupay.payment.security.cache.AuthenticationCacheService;
 import com.nexupay.payment.security.cache.AuthenticationLockService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +20,7 @@ import java.util.UUID;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class CredentialAuthenticationService {
 
     private static final String LOCK_KEY_PREFIX= "nexupay:auth:lock:";
@@ -24,23 +28,30 @@ public class CredentialAuthenticationService {
     private final SecretKeyHasher secretKeyHasher;
     private final AuthenticationCacheService authenticationCacheService;
     private final AuthenticationLockService authenticationLockService;
+    private final ApiKeyBloomFilterService apiKeyBloomFilterService;
+    private final SharedApiKeySetService sharedApiKeySetService;
 
 
-    public CredentialAuthenticationService(
-            ApiCredentialRepository apiCredentialRepository,
-            SecretKeyHasher secretKeyHasher,
-            AuthenticationCacheService authenticationCacheService,
-            AuthenticationLockService authenticationLockService) {
 
-        this.apiCredentialRepository = apiCredentialRepository;
-        this.secretKeyHasher = secretKeyHasher;
-        this.authenticationCacheService = authenticationCacheService;
-        this.authenticationLockService = authenticationLockService;
-    }
 
     public AuthenticatedMerchant authenticate(String apiKey, String secretKey) {
+        // 1. Check the local Bloom filter first.
+        if (!apiKeyBloomFilterService.mightContains(apiKey)) {
 
-        // 1. Fast path: Redis cache
+            // 2. The key may be newly created and not yet propagated.
+            // Check the shared Redis set before rejecting it.
+            try {
+                if (!sharedApiKeySetService.contains(apiKey)) {
+                    return null;
+                }
+            } catch (Exception exception) {
+                throw new AuthenticationServiceException(
+                        "Authentication service temporarily unavailable"
+                );
+            }
+        }
+
+        // 3. Fast path: Redis cache
         AuthenticatedMerchant cachedMerchant =
                 authenticationCacheService.get(apiKey, secretKey);
 
@@ -51,7 +62,7 @@ public class CredentialAuthenticationService {
         String lockKey = LOCK_KEY_PREFIX + apiKey;
         String lockValue = UUID.randomUUID().toString();
 
-        // 2. Try to become the request responsible for loading the cache
+        // 4. Try to become the request responsible for loading the cache
         boolean lockAcquired = authenticationLockService.acquireLock(
                 lockKey,
                 lockValue,
@@ -62,7 +73,7 @@ public class CredentialAuthenticationService {
             try {
 
                 log.info("AUTH LOCK ACQUIRED apiKey={}", apiKey);
-                // 3. Double-check Redis.
+                // 5. Double-check Redis.
                 // Another request may have populated it just before we acquired the lock.
                 cachedMerchant =
                         authenticationCacheService.get(apiKey, secretKey);
@@ -73,7 +84,7 @@ public class CredentialAuthenticationService {
                 }
 
                 log.info("AUTH DB + BCRYPT START apiKey={}", apiKey);
-                // 4. Only the lock owner reaches DB + BCrypt
+                // 6. Only the lock owner reaches DB + BCrypt
                 Optional<ApiCredential> credential =
                         apiCredentialRepository.findByApiKey(apiKey);
 
@@ -104,7 +115,7 @@ public class CredentialAuthenticationService {
                         );
 
                 log.info("AUTH DB + BCRYPT SUCCESS apiKey={}", apiKey);
-                // 5. Populate Redis
+                // 7. Populate Redis
                 authenticationCacheService.put(
                         apiKey,
                         secretKey,
@@ -116,7 +127,7 @@ public class CredentialAuthenticationService {
 
             } finally {
 
-                // 6. Only the owner can release this lock
+                // 8. Only the owner can release this lock
                 authenticationLockService.releaseLock(
                         lockKey,
                         lockValue
@@ -126,7 +137,7 @@ public class CredentialAuthenticationService {
         }
         log.info("AUTH LOCK BUSY apiKey={}", apiKey);
 
-        // 7. Another request is already loading the cache.
+        // 9. Another request is already loading the cache.
         // Wait briefly and check Redis again.
         for (int attempt = 0; attempt < 40; attempt++) {
 
@@ -150,7 +161,7 @@ public class CredentialAuthenticationService {
             }
         }
 
-        // 8. Cache still unavailable after waiting
+        // 10. Cache still unavailable after waiting
         throw new AuthenticationServiceException(
                 "Authentication service temporarily unavailable"
         );

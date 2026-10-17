@@ -4,12 +4,10 @@ import com.nexupay.payment.outbox.entity.OutboxEvent;
 import com.nexupay.payment.outbox.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -24,9 +22,6 @@ public class OutboxPublisher {
     private final RedisTemplate<String,String> redisTemplate;
     private final OutboxClaimService outboxClaimService;
     private final OutboxPublishService outboxPublishService;
-
-    @Value("${nexupay.bloom.consumer-name}")
-    private String consumerName;
 
 
     @Scheduled(fixedDelay = 10000)
@@ -61,7 +56,6 @@ public class OutboxPublisher {
                                 "createdAt",event.getCreatedAt().toString()
                         )
                 );
-                outboxPublishService.markPublished(event.getId());
                 boolean marked = outboxPublishService.markPublished(event.getId());
                 if (!marked) {
                     log.info(
