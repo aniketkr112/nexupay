@@ -37,11 +37,12 @@ public class CredentialAuthenticationService {
     public AuthenticatedMerchant authenticate(String apiKey, String secretKey) {
         // 1. Check the local Bloom filter first.
         if (!apiKeyBloomFilterService.mightContains(apiKey)) {
-
+            log.info("Bloom say this api key {} not exist: ",apiKey);
             // 2. The key may be newly created and not yet propagated.
             // Check the shared Redis set before rejecting it.
             try {
                 if (!sharedApiKeySetService.contains(apiKey)) {
+                    log.info("Shared set also say this api key {} not exist: ",apiKey);
                     return null;
                 }
             } catch (Exception exception) {

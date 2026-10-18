@@ -5,6 +5,7 @@ import com.nexupay.payment.common.constant.HttpHeaders;
 import com.nexupay.payment.common.constant.SecurityConstants;
 import com.nexupay.payment.common.dto.ErrorResponse;
 import com.nexupay.payment.common.enums.ErrorCode;
+import com.nexupay.payment.common.exception.AuthenticationServiceException;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
 import com.nexupay.payment.credential.service.CredentialAuthenticationService;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
@@ -63,7 +64,23 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
             sendUnauthorized(response);
             return;
         }
-        AuthenticatedMerchant authenticatedMerchant = credentialAuthenticationService.authenticate(apiKey,secretKey);
+
+        AuthenticatedMerchant authenticatedMerchant;
+        try {
+            authenticatedMerchant =
+                    credentialAuthenticationService.authenticate(apiKey, secretKey);
+        } catch (RuntimeException exception) {
+            response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+            ErrorResponse errorResponse = ErrorResponse.of(
+                    ErrorCode.AUTHENTICATION_SERVICE_TEMPORARILY_UNAVAIABLE,
+                    "Authentication service temporarily unavailable"
+            );
+
+            objectMapper.writeValue(response.getWriter(), errorResponse);
+            return;
+        }
 
         if (authenticatedMerchant==null) {
             sendUnauthorized(response);

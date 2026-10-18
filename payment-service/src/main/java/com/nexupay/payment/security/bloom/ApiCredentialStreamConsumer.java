@@ -40,8 +40,9 @@ public class ApiCredentialStreamConsumer {
         streamConfig.ensureConsumerGroup(consumerGroup);
     }
 
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelayString = "${nexupay.bloom.consumer-delay:1000}")
     public void consume() {
+        log.info("Consumers running to consume new api key from redis");
         streamConfig.ensureConsumerGroup(consumerGroup);
         List<MapRecord<String, Object, Object>> records =
                 redisTemplate.opsForStream().read(
