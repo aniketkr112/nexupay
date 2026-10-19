@@ -41,11 +41,11 @@ public class RedisAuthenticationCacheService implements AuthenticationCacheServi
         String cachedValue = redisTemplate.opsForValue().get(cacheKey);
 
         if (cachedValue == null) {
-            //log.info("Authentication cache MISS for apiKey={}", apiKey);
+            log.info("Authentication cache MISS for apiKey={}", apiKey);
             return null;
         }
 
-        //log.info("Authentication cache HIT for apiKey={}", apiKey);
+        log.info("Authentication cache HIT for apiKey={}", apiKey);
 
         try {
             return objectMapper.readValue(

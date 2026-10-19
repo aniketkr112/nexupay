@@ -15,6 +15,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,6 +28,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ApiAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApiCredentialRepository apiCredentialRepository;
@@ -66,29 +69,30 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         }
 
         AuthenticatedMerchant authenticatedMerchant;
+        boolean allowed;
         try {
             authenticatedMerchant =
                     credentialAuthenticationService.authenticate(apiKey, secretKey);
-        } catch (RuntimeException exception) {
-            response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-            ErrorResponse errorResponse = ErrorResponse.of(
-                    ErrorCode.AUTHENTICATION_SERVICE_TEMPORARILY_UNAVAIABLE,
-                    "Authentication service temporarily unavailable"
+            if (authenticatedMerchant==null) {
+                sendUnauthorized(response);
+                return;
+            }
+
+            allowed = redisRateLimitService.tryAcquire(
+                    authenticatedMerchant.getId()
             );
 
-            objectMapper.writeValue(response.getWriter(), errorResponse);
+        } catch (AuthenticationServiceException exception) {
+            log.error("Authentication service unavailable", exception);
+            sendServiceUnavailable(response);
             return;
-        }
 
-        if (authenticatedMerchant==null) {
-            sendUnauthorized(response);
+        } catch (DataAccessException exception) {
+            log.error("Redis or data-access failure during authentication", exception);
+            sendServiceUnavailable(response);
             return;
         }
-        boolean allowed = redisRateLimitService.tryAcquire(
-                authenticatedMerchant.getId()
-        );
 
         if (!allowed) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
@@ -113,6 +117,20 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_API_CREDENTIALS,"Invalid API credentials");
+        objectMapper.writeValue(response.getWriter(), errorResponse);
+    }
+
+    private void sendServiceUnavailable(HttpServletResponse response)
+            throws IOException {
+
+        response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                ErrorCode.AUTHENTICATION_SERVICE_TEMPORARILY_UNAVAIABLE,
+                "Authentication service temporarily unavailable"
+        );
+
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }
