@@ -9,31 +9,28 @@ import com.nexupay.payment.merchant.repository.MerchantRepository;
 import com.nexupay.payment.payment.dto.response.CheckoutResponse;
 import com.nexupay.payment.payment.entity.Payment;
 import com.nexupay.payment.payment.repository.PaymentRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class CheckoutServiceImpl implements CheckoutService{
 
-    private final PaymentRepository paymentRepository;
+    private final CheckoutAuthorizationService checkoutAuthorizationService;
 
     private final MerchantRepository merchantRepository;
 
-    public CheckoutServiceImpl(PaymentRepository paymentRepository, MerchantRepository merchantRepository) {
-        this.paymentRepository = paymentRepository;
-        this.merchantRepository = merchantRepository;
-    }
+
 
 
     @Override
-    public CheckoutResponse getCheckout(String paymentId) {
+    public CheckoutResponse getCheckout(String paymentId,String authorizationHeader) {
         // TODO(SECURITY):
         // Validate paymentId format before querying the database.
 
-        Payment payment = paymentRepository
-                .findByPaymentId(paymentId)
-                .orElseThrow(()-> new PaymentNotFoundException(paymentId));
+        Payment payment = checkoutAuthorizationService.authorize(paymentId, authorizationHeader);
 
         CheckoutStatus checkoutStatus = resolveCheckoutState(payment);
 

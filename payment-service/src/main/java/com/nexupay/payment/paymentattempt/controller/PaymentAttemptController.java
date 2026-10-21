@@ -4,10 +4,7 @@ import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptRequest;
 import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptResponse;
 import com.nexupay.payment.paymentattempt.service.PaymentAttemptService;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/payment-attempts")
@@ -21,8 +18,8 @@ public class PaymentAttemptController {
 
     @PostMapping("/upi")
     public UpiPaymentAttemptResponse createUpiPaymentAttempt(
-            @Valid @RequestBody UpiPaymentAttemptRequest request) {
-
-        return paymentAttemptService.createUpiPaymentAttempt(request);
+            @Valid @RequestBody UpiPaymentAttemptRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        return paymentAttemptService.createUpiPaymentAttempt(request, authorizationHeader);
     }
 }

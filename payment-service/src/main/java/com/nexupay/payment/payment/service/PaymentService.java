@@ -1,10 +1,13 @@
 package com.nexupay.payment.payment.service;
 
 import com.nexupay.payment.common.constant.PaymentConstants;
+import com.nexupay.payment.common.enums.PaymentStatus;
 import com.nexupay.payment.common.util.IdGeneration;
 import com.nexupay.payment.payment.dto.request.PaymentRequest;
 import com.nexupay.payment.payment.dto.response.PaymentResponse;
+import com.nexupay.payment.payment.entity.CheckoutSession;
 import com.nexupay.payment.payment.entity.Payment;
+import com.nexupay.payment.payment.repository.CheckoutSessionRepository;
 import com.nexupay.payment.payment.repository.PaymentRepository;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,8 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final IdGeneration idGeneration;
+    private final CheckoutTokenService checkoutTokenService;
+    private final CheckoutSessionRepository checkoutSessionRepository;
 
 
 
@@ -53,9 +58,9 @@ public class PaymentService {
 
         // Handles the rare race condition where two identical
         // payment requests are processed concurrently.
+        final Payment savedPayment;
         try {
-            Payment savedPayment = paymentRepository.save(payment);
-            return toPaymentResponse(savedPayment);
+            savedPayment = paymentRepository.save(payment);
         } catch (DataIntegrityViolationException ex) {
 
             log.info(
@@ -67,8 +72,32 @@ public class PaymentService {
             Payment alreadyExistPayment =
                     findExistingPayment(merchantId,merchantOrderId)
                             .orElseThrow(()->ex);
-            return toPaymentResponse(alreadyExistPayment);
+            return toPaymentResponseWithCheckoutToken(alreadyExistPayment);
         }
+        return toPaymentResponseWithCheckoutToken(savedPayment);
+    }
+
+    private PaymentResponse toPaymentResponseWithCheckoutToken(Payment payment) {
+        PaymentResponse response = toPaymentResponse(payment);
+
+        // Only an open, unexpired payment can receive a new checkout session.
+        if (payment.getStatus() == PaymentStatus.CREATED
+                && payment.getExpiresAt().isAfter(LocalDateTime.now())) {
+            String rawToken = checkoutTokenService.generateToken();
+            String tokenHash = checkoutTokenService.hashToken(rawToken);
+
+            CheckoutSession session = CheckoutSession.create(
+                    payment,
+                    tokenHash,
+                    payment.getExpiresAt()
+            );
+            checkoutSessionRepository.save(session);
+
+            // The raw token is returned once; only its hash is persisted.
+            response.setCheckoutToken(rawToken);
+        }
+
+        return response;
     }
 
     private PaymentResponse toPaymentResponse(Payment payment) {

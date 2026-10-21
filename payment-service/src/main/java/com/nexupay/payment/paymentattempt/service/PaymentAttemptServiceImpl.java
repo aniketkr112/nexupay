@@ -5,6 +5,7 @@ import com.nexupay.payment.bank.dto.BankResponse;
 import com.nexupay.payment.bank.service.BankService;
 import com.nexupay.payment.common.util.PaymentMessages;
 import com.nexupay.payment.payment.entity.Payment;
+import com.nexupay.payment.payment.service.CheckoutAuthorizationService;
 import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptResponse;
 import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptRequest;
 import com.nexupay.payment.paymentattempt.entity.PaymentAttempt;
@@ -19,10 +20,15 @@ public class PaymentAttemptServiceImpl implements PaymentAttemptService{
 
     private final BankService bankService;
     private final PaymentAttemptTransactionService paymentAttemptTransactionService;
+    private final CheckoutAuthorizationService checkoutAuthorizationService;
 
 
     @Override
-    public UpiPaymentAttemptResponse createUpiPaymentAttempt(UpiPaymentAttemptRequest request) {
+    public UpiPaymentAttemptResponse createUpiPaymentAttempt(
+            UpiPaymentAttemptRequest request,String authorizationHeader) {
+
+        checkoutAuthorizationService
+                .authorize(request.getPaymentId(), authorizationHeader);
 
         PaymentAttempt paymentAttempt =
                 paymentAttemptTransactionService

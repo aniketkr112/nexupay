@@ -168,6 +168,17 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(CheckoutAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleCheckoutAccessDenied(
+            CheckoutAccessDeniedException ex) {
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(
+                        ErrorCode.INVALID_CHECKOUT_ACCESS,
+                        "Valid checkout access is required"
+                ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpectedException(
             Exception ex) {

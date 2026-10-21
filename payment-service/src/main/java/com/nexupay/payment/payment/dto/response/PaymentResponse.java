@@ -1,10 +1,14 @@
 package com.nexupay.payment.payment.dto.response;
 
 import com.nexupay.payment.common.enums.PaymentStatus;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
 public class PaymentResponse {
     private String paymentId;
 
@@ -18,51 +22,7 @@ public class PaymentResponse {
 
     private LocalDateTime expiresAt;
 
-    public String getPaymentId() {
-        return paymentId;
-    }
+    // Returned to the merchant so it can securely deliver checkout access to the customer.
+    private String checkoutToken;
 
-    public void setPaymentId(String paymentId) {
-        this.paymentId = paymentId;
-    }
-
-    public String getMerchantOrderId() {
-        return merchantOrderId;
-    }
-
-    public void setMerchantOrderId(String merchantOrderId) {
-        this.merchantOrderId = merchantOrderId;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    public PaymentStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(PaymentStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void setExpiresAt(LocalDateTime expiresAt) {
-        this.expiresAt = expiresAt;
-    }
 }

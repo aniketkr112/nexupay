@@ -4,5 +4,5 @@ import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptResponse;
 import com.nexupay.payment.paymentattempt.dto.UpiPaymentAttemptRequest;
 
 public interface PaymentAttemptService {
-    UpiPaymentAttemptResponse createUpiPaymentAttempt(UpiPaymentAttemptRequest request);
+    UpiPaymentAttemptResponse createUpiPaymentAttempt(UpiPaymentAttemptRequest request,String authorizationHeader);
 }
