@@ -10,5 +10,8 @@ import java.util.Optional;
 public interface ApiCredentialRepository extends JpaRepository<ApiCredential,Long> {
     Optional<ApiCredential> findByApiKey(String apiKey);
 
+    Optional<ApiCredential> findByCredentialIdAndMerchantId(
+            String credentialId, Long merchantId);
+
     List<ApiCredential> findAllByStatus(CredentialStatus status);
 }

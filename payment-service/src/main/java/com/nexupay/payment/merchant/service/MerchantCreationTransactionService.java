@@ -73,6 +73,7 @@ public class MerchantCreationTransactionService {
 
         CreateMerchantResponse response = new CreateMerchantResponse();
         response.setMerchantId(merchantId);
+        response.setCredentialId(apiCredentialId);
         response.setApiKey(apiKey);
         response.setSecretKey(secretKey);
 

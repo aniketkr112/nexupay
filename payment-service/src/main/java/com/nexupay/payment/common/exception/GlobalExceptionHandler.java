@@ -77,6 +77,17 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(CredentialNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCredentialNotFound(
+            CredentialNotFoundException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(
+                        ErrorCode.CREDENTIAL_NOT_FOUND,
+                        ex.getMessage()
+                ));
+    }
+
     @ExceptionHandler(MerchantNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleMerchantNotFound(
             MerchantNotFoundException ex) {
