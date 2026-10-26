@@ -36,7 +36,7 @@ public class RedisAuthenticationCacheService implements AuthenticationCacheServi
 
     @Override
     public AuthenticatedMerchant get(String apiKey, String secretKey) {
-        String cacheKey = buildCacheKey(apiKey, secretKey);
+        String cacheKey = buildCacheKey(apiKey);
 
         String cachedValue = redisTemplate.opsForValue().get(cacheKey);
 
@@ -45,15 +45,30 @@ public class RedisAuthenticationCacheService implements AuthenticationCacheServi
             return null;
         }
 
-        log.info("Authentication cache HIT for apiKey={}", apiKey);
-
         try {
-            return objectMapper.readValue(
-                    cachedValue,
-                    AuthenticatedMerchant.class
-            );
+            AuthenticationCacheEntry cacheEntry =
+                    objectMapper
+                            .readValue(cachedValue,AuthenticationCacheEntry.class);
+
+            String suppliedFingerprint =
+                    secretFingerprintService.generate(secretKey);
+
+            if (!suppliedFingerprint.equals(cacheEntry.secretFingerprint())) {
+                log.info("Authentication cache MISS for apiKey={}", apiKey);
+                return null;
+            }
+
+            log.info("Authentication cache HIT for apiKey={}", apiKey);
+
+            return cacheEntry.authenticatedMerchant();
+
         } catch (JsonProcessingException exception) {
             redisTemplate.delete(cacheKey);
+
+            log.warn(
+                    "Invalid authentication cache entry removed for apiKey={}",
+                    apiKey
+            );
 
             return null;
         }
@@ -65,12 +80,13 @@ public class RedisAuthenticationCacheService implements AuthenticationCacheServi
             String secretKey,
             AuthenticatedMerchant authenticatedMerchant) {
 
-        String cacheKey = buildCacheKey(apiKey, secretKey);
+        String cacheKey = buildCacheKey(apiKey);
 
         try {
-            String value = objectMapper.writeValueAsString(
-                    authenticatedMerchant
-            );
+
+            String secretFingerPrint = secretFingerprintService.generate(secretKey);
+            AuthenticationCacheEntry cacheEntry = new AuthenticationCacheEntry(secretFingerPrint,authenticatedMerchant);
+            String value = objectMapper.writeValueAsString(cacheEntry);
 
             redisTemplate.opsForValue().set(
                     cacheKey,
@@ -88,13 +104,18 @@ public class RedisAuthenticationCacheService implements AuthenticationCacheServi
 
     @Override
     public void evict(String apiKey) {
-        // Will be implemented when credential invalidation is introduced.
+        String cacheKey = buildCacheKey(apiKey);
+        redisTemplate.delete(cacheKey);
+
+        log.info("Authentication cache evicted for apiKey={}", apiKey);
     }
 
-    private String buildCacheKey(String apiKey, String secretKey) {
-        return CACHE_KEY_PREFIX
-                + apiKey
-                + ":"
-                + secretFingerprintService.generate(secretKey);
+    private String buildCacheKey(String apiKey) {
+        return CACHE_KEY_PREFIX+ apiKey;
+    }
+
+    private record AuthenticationCacheEntry(
+            String secretFingerprint,
+            AuthenticatedMerchant authenticatedMerchant) {
     }
 }

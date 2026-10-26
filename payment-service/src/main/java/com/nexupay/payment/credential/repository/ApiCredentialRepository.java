@@ -14,4 +14,8 @@ public interface ApiCredentialRepository extends JpaRepository<ApiCredential,Lon
             String credentialId, Long merchantId);
 
     List<ApiCredential> findAllByStatus(CredentialStatus status);
+
+    List<ApiCredential> findAllByMerchantIdOrderByCreatedAtDesc(
+            Long merchantId
+    );
 }

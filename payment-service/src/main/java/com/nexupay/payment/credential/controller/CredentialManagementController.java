@@ -2,6 +2,7 @@ package com.nexupay.payment.credential.controller;
 
 import com.nexupay.payment.credential.dto.request.CreateCredentialRequest;
 import com.nexupay.payment.credential.dto.response.CreateCredentialResponse;
+import com.nexupay.payment.credential.dto.response.CredentialSummaryResponse;
 import com.nexupay.payment.credential.service.CredentialManagementService;
 import com.nexupay.payment.security.CurrentMerchantProvider;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
@@ -10,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/merchants/credentials")
@@ -32,6 +35,18 @@ public class CredentialManagementController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CredentialSummaryResponse>> listCredentials() {
+
+        AuthenticatedMerchant merchant =
+                currentMerchantProvider.getCurrentMerchant();
+
+        List<CredentialSummaryResponse> credentials =
+                credentialManagementService.listCredentials(merchant);
+
+        return ResponseEntity.ok(credentials);
     }
 
 

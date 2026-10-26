@@ -8,6 +8,7 @@ import com.nexupay.payment.common.exception.MerchantNotFoundException;
 import com.nexupay.payment.common.util.IdGeneration;
 import com.nexupay.payment.credential.dto.request.CreateCredentialRequest;
 import com.nexupay.payment.credential.dto.response.CreateCredentialResponse;
+import com.nexupay.payment.credential.dto.response.CredentialSummaryResponse;
 import com.nexupay.payment.credential.entity.ApiCredential;
 import com.nexupay.payment.credential.repository.ApiCredentialRepository;
 import com.nexupay.payment.merchant.entity.Merchant;
@@ -16,9 +17,12 @@ import com.nexupay.payment.outbox.entity.OutboxEvent;
 import com.nexupay.payment.outbox.repository.OutboxEventRepository;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
 import com.nexupay.payment.security.bloom.SharedApiKeySetService;
+import com.nexupay.payment.security.cache.AuthenticationCacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +33,7 @@ public class CredentialManagementService {
     private final IdGeneration idGeneration;
     private final SecretKeyHasher secretKeyHasher;
     private final OutboxEventRepository outboxEventRepository;
+    private final AuthenticationCacheService authenticationCacheService;
     private final SharedApiKeySetService sharedApiKeySetService;
 
 
@@ -84,6 +89,38 @@ public class CredentialManagementService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public List<CredentialSummaryResponse> listCredentials(
+            AuthenticatedMerchant authenticatedMerchant) {
+
+        return apiCredentialRepository
+                .findAllByMerchantIdOrderByCreatedAtDesc(
+                        authenticatedMerchant.getId()
+                )
+                .stream()
+                .map(credential -> new CredentialSummaryResponse(
+                        credential.getCredentialId(),
+                        credential.getName(),
+                        maskApiKey(credential.getApiKey()),
+                        toPublicEnvironment(credential.getEnvironment()),
+                        credential.getStatus().name(),
+                        credential.getCreatedAt()
+                ))
+                .toList();
+    }
+
+    private String maskApiKey(String apiKey) {
+        int visibleLength = Math.min(apiKey.length(), 16);
+        return apiKey.substring(0, visibleLength) + "...";
+    }
+
+    private String toPublicEnvironment(Environment environment) {
+        return switch (environment) {
+            case SANDBOX -> "TEST";
+            case PRODUCTION -> "LIVE";
+        };
+    }
+
     /**
      * Revokes a credential owned by the authenticated merchant. Repeating the
      * operation is safe: a credential that is already revoked remains revoked.
@@ -101,5 +138,6 @@ public class CredentialManagementService {
                 .orElseThrow(CredentialNotFoundException::new);
 
         credential.revoke();
+        authenticationCacheService.evict(credential.getApiKey());
     }
 }
