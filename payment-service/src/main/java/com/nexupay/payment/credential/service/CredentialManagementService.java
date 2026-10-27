@@ -3,6 +3,7 @@ package com.nexupay.payment.credential.service;
 import com.nexupay.payment.common.cryptography.SecretKeyHasher;
 import com.nexupay.payment.common.enums.CredentialStatus;
 import com.nexupay.payment.common.enums.Environment;
+import com.nexupay.payment.common.exception.AuthenticationServiceException;
 import com.nexupay.payment.common.exception.CredentialNotFoundException;
 import com.nexupay.payment.common.exception.MerchantNotFoundException;
 import com.nexupay.payment.common.util.IdGeneration;
@@ -18,11 +19,16 @@ import com.nexupay.payment.outbox.repository.OutboxEventRepository;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
 import com.nexupay.payment.security.bloom.SharedApiKeySetService;
 import com.nexupay.payment.security.cache.AuthenticationCacheService;
+import com.nexupay.payment.security.cache.AuthenticationLockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +41,9 @@ public class CredentialManagementService {
     private final OutboxEventRepository outboxEventRepository;
     private final AuthenticationCacheService authenticationCacheService;
     private final SharedApiKeySetService sharedApiKeySetService;
+    private final AuthenticationLockService authenticationLockService;
+
+    private static final String AUTH_LOCK_KEY_PREFIX = "nexupay:auth:lock:";
 
 
     @Transactional
@@ -136,6 +145,35 @@ public class CredentialManagementService {
                         authenticatedMerchant.getId()
                 )
                 .orElseThrow(CredentialNotFoundException::new);
+
+        String lockKey = AUTH_LOCK_KEY_PREFIX + credential.getApiKey();
+        String lockValue = UUID.randomUUID().toString();
+
+        boolean lockAcquired = authenticationLockService.acquireLock(
+                lockKey,
+                lockValue,
+                Duration.ofSeconds(5)
+        );
+
+        if (!lockAcquired) {
+            throw new AuthenticationServiceException(
+                    "Unable to acquire credential authentication lock"
+            );
+        }
+
+        try {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCompletion(int status) {
+                            authenticationLockService.releaseLock(lockKey, lockValue);
+                        }
+                    }
+            );
+        } catch (RuntimeException exception) {
+            authenticationLockService.releaseLock(lockKey, lockValue);
+            throw exception;
+        }
 
         credential.revoke();
         authenticationCacheService.evict(credential.getApiKey());
