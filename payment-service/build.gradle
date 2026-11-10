@@ -26,6 +26,8 @@ dependencies {
 	implementation 'com.github.f4b6a3:ulid-creator:5.2.3'
 	implementation 'org.springframework.security:spring-security-crypto'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.hibernate.orm:hibernate-micrometer'
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 	// for redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	// for bloom filter
