@@ -25,4 +25,6 @@ public class PaymentResponse {
     // Returned to the merchant so it can securely deliver checkout access to the customer.
     private String checkoutToken;
 
+    private String checkoutMessage;
+
 }

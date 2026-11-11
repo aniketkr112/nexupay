@@ -29,93 +29,54 @@ public class PaymentService {
     private final IdGeneration idGeneration;
     private final CheckoutTokenService checkoutTokenService;
     private final CheckoutSessionRepository checkoutSessionRepository;
+    private final PaymentCreationTransactionService paymentCreationTransactionService;
 
 
 
-    public PaymentResponse createPayment(AuthenticatedMerchant merchant, PaymentRequest request){
-
-        Long merchantId = merchant.getId();
-        String merchantOrderId = request.getMerchantOrderId();
-        Optional<Payment> existingPayment = findExistingPayment(merchantId, merchantOrderId);
-
-        if(existingPayment.isPresent()){
-            log.info(
-                    "Idempotent retry detected. MerchantId={}, MerchantOrderId={}, PaymentId={}",
-                    merchantId,
-                    merchantOrderId,
-                    existingPayment.get().getPaymentId()
-            );
-            return toPaymentResponse(existingPayment.get());
-        }
-        String paymentId = idGeneration.generatePaymentId();
-
-        Payment payment = Payment.create(
-                merchant.getId(),
-                paymentId,
-                request,
-                LocalDateTime.now().plus(PaymentConstants.PAYMENT_EXPIRY)
-        );
-
-        // Handles the rare race condition where two identical
-        // payment requests are processed concurrently.
-        final Payment savedPayment;
+    public PaymentResponse createPayment(
+            AuthenticatedMerchant merchant,
+            PaymentRequest request
+    ) {
         try {
-            savedPayment = paymentRepository.save(payment);
+            return paymentCreationTransactionService.createPayment(
+                    merchant,
+                    request
+            );
         } catch (DataIntegrityViolationException ex) {
+
+            if (!isMerchantOrderDuplicate(ex)) {
+                throw ex;
+            }
 
             log.info(
                     "Concurrent payment creation detected. MerchantId={}, MerchantOrderId={}",
-                    merchantId,
-                    merchantOrderId
+                    merchant.getId(),
+                    request.getMerchantOrderId()
             );
 
-            Payment alreadyExistPayment =
-                    findExistingPayment(merchantId,merchantOrderId)
-                            .orElseThrow(()->ex);
-            return toPaymentResponseWithCheckoutToken(alreadyExistPayment);
-        }
-        return toPaymentResponseWithCheckoutToken(savedPayment);
-    }
-
-    private PaymentResponse toPaymentResponseWithCheckoutToken(Payment payment) {
-        PaymentResponse response = toPaymentResponse(payment);
-
-        // Only an open, unexpired payment can receive a new checkout session.
-        if (payment.getStatus() == PaymentStatus.CREATED
-                && payment.getExpiresAt().isAfter(LocalDateTime.now())) {
-            String rawToken = checkoutTokenService.generateToken();
-            String tokenHash = checkoutTokenService.hashToken(rawToken);
-
-            CheckoutSession session = CheckoutSession.create(
-                    payment,
-                    tokenHash,
-                    payment.getExpiresAt()
+            return paymentCreationTransactionService.createPayment(
+                    merchant,
+                    request
             );
-            checkoutSessionRepository.save(session);
+        }
+    }
 
-            // The raw token is returned once; only its hash is persisted.
-            response.setCheckoutToken(rawToken);
+    private boolean isMerchantOrderDuplicate(
+            DataIntegrityViolationException ex
+    ) {
+        Throwable cause = ex;
+
+        while (cause != null) {
+
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException violation) {
+                return "uk_payment_merchant_order".equals(
+                        violation.getConstraintName()
+                );
+            }
+
+            cause = cause.getCause();
         }
 
-        return response;
-    }
-
-    private PaymentResponse toPaymentResponse(Payment payment) {
-
-        PaymentResponse response = new PaymentResponse();
-
-        response.setPaymentId(payment.getPaymentId());
-        response.setMerchantOrderId(payment.getMerchantOrderId());
-        response.setAmount(payment.getAmount());
-        response.setCurrency(payment.getCurrency());
-        response.setStatus(payment.getStatus());
-        response.setExpiresAt(payment.getExpiresAt());
-
-        return response;
-    }
-
-    private Optional<Payment> findExistingPayment(Long merchantId,String merchantOrderId){
-        return paymentRepository
-                .findByMerchantIdAndMerchantOrderId(merchantId, merchantOrderId);
+        return false;
     }
 }
