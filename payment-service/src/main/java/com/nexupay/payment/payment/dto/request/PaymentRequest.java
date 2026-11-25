@@ -1,23 +1,26 @@
 package com.nexupay.payment.payment.dto.request;
 
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
 public class PaymentRequest {
     @NotBlank(message = "Merchant order id is required")
+    @Size(max = 50, message = "Merchant order id must not exceed 50 characters")
     private String merchantOrderId;
+    @Size(max = 255, message = "Customer name must not exceed 255 characters")
     private String customerName;
+    @Email(message = "Customer email must be valid")
+    @Size(max = 255, message = "Customer email must not exceed 255 characters")
     private String customerEmail;
+    @Pattern(regexp = "^[0-9]{10}$", message = "Customer phone must contain exactly 10 digits")
     private String customerPhone;
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be greater than zero")
     @Digits(integer = 17, fraction = 2, message = "Amount must have at most 2 decimal places")
     private BigDecimal amount;
     @NotBlank(message = "Currency is required")
+    @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be a 3-letter uppercase code")
     private String currency;
 
 
