@@ -10,6 +10,8 @@ public enum CheckoutStatus {
 
     COMPLETED("Payment completed successfully."),
 
+    FAILED("Payment failed."),
+
     CANCELLED("Payment cancelled");
 
     CheckoutStatus(String message) {

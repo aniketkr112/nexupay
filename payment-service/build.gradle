@@ -32,6 +32,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	// for bloom filter
 	implementation 'com.google.guava:guava:33.4.8-jre'
+    // OpenTelemetry custom instrumentation
+    implementation 'io.opentelemetry:opentelemetry-api:1.56.0'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

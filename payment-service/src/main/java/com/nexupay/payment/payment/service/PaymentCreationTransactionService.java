@@ -1,6 +1,7 @@
 
 package com.nexupay.payment.payment.service;
 
+import com.nexupay.payment.common.exception.PaymentRequestConflictException;
 import com.nexupay.payment.common.util.IdGeneration;
 import com.nexupay.payment.payment.repository.CheckoutSessionRepository;
 import com.nexupay.payment.payment.repository.PaymentRepository;
@@ -16,6 +17,7 @@ import com.nexupay.payment.security.auth.AuthenticatedMerchant;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -52,6 +54,12 @@ public class PaymentCreationTransactionService {
                             existingPayment.get().getPaymentId()
                     )
                     .orElseThrow();
+
+            if (!isSamePaymentRequest(payment, request)) {
+                throw new PaymentRequestConflictException(
+                        "Merchant order ID already exists with different payment details."
+                );
+            }
 
             return toPaymentResponseWithCheckoutToken(payment);
         }
@@ -123,6 +131,17 @@ public class PaymentCreationTransactionService {
         response.setExpiresAt(payment.getExpiresAt());
 
         return response;
+    }
+
+    private boolean isSamePaymentRequest(
+            Payment payment,
+            PaymentRequest request
+    ) {
+        return payment.getAmount().compareTo(request.getAmount()) == 0
+                && payment.getCurrency().equals(request.getCurrency())
+                && Objects.equals(payment.getCustomerName(), request.getCustomerName())
+                && Objects.equals(payment.getCustomerEmail(), request.getCustomerEmail())
+                && Objects.equals(payment.getCustomerPhone(), request.getCustomerPhone());
     }
 
 

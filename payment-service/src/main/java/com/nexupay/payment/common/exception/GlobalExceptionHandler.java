@@ -216,4 +216,17 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(PaymentRequestConflictException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentRequestConflict(
+            PaymentRequestConflictException ex) {
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(
+                        ErrorResponse.of(
+                                ErrorCode.PAYMENT_REQUEST_CONFLICT,
+                                ex.getMessage()
+                        )
+                );
+    }
+
 }

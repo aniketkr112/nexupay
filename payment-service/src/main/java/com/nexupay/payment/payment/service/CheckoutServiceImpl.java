@@ -48,6 +48,9 @@ public class CheckoutServiceImpl implements CheckoutService{
         if(payment.getExpiresAt().isBefore(LocalDateTime.now())){
             return CheckoutStatus.EXPIRED;
         }
+        if(payment.getStatus()==PaymentStatus.FAILED){
+            return CheckoutStatus.FAILED;
+        }
 
         return CheckoutStatus.PAYABLE;
     }
