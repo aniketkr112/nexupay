@@ -11,6 +11,7 @@ import com.nexupay.payment.refund.entity.Refund;
 import com.nexupay.payment.refund.enums.RefundStatus;
 import com.nexupay.payment.refund.exceptions.LargeAmountRefundException;
 import com.nexupay.payment.refund.exceptions.PaymentNotEligibleForRefundException;
+import com.nexupay.payment.refund.exceptions.RefundRequestConflictException;
 import com.nexupay.payment.refund.repository.RefundRepository;
 import com.nexupay.payment.security.auth.AuthenticatedMerchant;
 import jakarta.transaction.Transactional;
@@ -54,12 +55,21 @@ public class RefundServiceImpl implements RefundService{
         Optional<Refund> existingRefund = findExistingRefund(merchantRefundId,paymentId);
 
         if(existingRefund.isPresent()){
+            Refund refund = existingRefund.get();
+
+            if(!isSameRefundRequest(refund, request)){
+                throw new RefundRequestConflictException(
+                        "Merchant refund ID already exists with a different refund amount."
+                );
+            }
+
             log.info(
-                    "Idempotent retry detected.  MerchantRefundId={}, PaymentId={}",
+                    "Idempotent retry detected. MerchantRefundId={}, PaymentId={}",
                     merchantRefundId,
                     paymentId
             );
-            return toRefundResponse(existingRefund.get());
+
+            return toRefundResponse(refund);
         }
 
         BigDecimal committedRefundAmount = refundRepository
@@ -95,6 +105,13 @@ public class RefundServiceImpl implements RefundService{
             Refund alreadyExistRefund =
                     findExistingRefund(merchantRefundId,paymentId)
                             .orElseThrow(()->ex);
+
+            if(!isSameRefundRequest(alreadyExistRefund, request)){
+                throw new RefundRequestConflictException(
+                        "Merchant refund ID already exists with a different refund amount."
+                );
+            }
+
             return toRefundResponse(alreadyExistRefund);
         }
 
@@ -114,6 +131,10 @@ public class RefundServiceImpl implements RefundService{
         response.setStatus(refund.getStatus());
 
         return response;
+    }
+
+    private boolean isSameRefundRequest(Refund refund, CreateRefundRequest request) {
+        return refund.getAmount().compareTo(request.getAmount()) == 0;
     }
 }
 

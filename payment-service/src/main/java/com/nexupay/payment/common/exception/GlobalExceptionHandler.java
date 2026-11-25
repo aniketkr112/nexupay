@@ -5,6 +5,7 @@ import com.nexupay.payment.common.dto.ValidationError;
 import com.nexupay.payment.common.enums.ErrorCode;
 import com.nexupay.payment.refund.exceptions.LargeAmountRefundException;
 import com.nexupay.payment.refund.exceptions.PaymentNotEligibleForRefundException;
+import com.nexupay.payment.refund.exceptions.RefundRequestConflictException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -227,6 +228,18 @@ public class GlobalExceptionHandler {
                                 ex.getMessage()
                         )
                 );
+    }
+
+    @ExceptionHandler(RefundRequestConflictException.class)
+    public ResponseEntity<ErrorResponse> handleRefundRequestConflict(
+            RefundRequestConflictException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(
+                        ErrorCode.REFUND_REQUEST_CONFLICT,
+                        ex.getMessage()
+                ));
     }
 
 }
